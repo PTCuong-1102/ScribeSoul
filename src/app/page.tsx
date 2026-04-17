@@ -1,65 +1,64 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Sparkles, ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-surface dark:bg-surface-container-lowest transition-colors duration-500 overflow-hidden relative">
+      {/* Background elements */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] -z-10 animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] -z-10" />
+
+      <div className="max-w-3xl w-full text-center space-y-12">
+        <div className="space-y-6">
+          <div className="flex items-center justify-center space-x-3 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-serif text-3xl shadow-xl shadow-primary/10">
+              S
+            </div>
+            <h1 className="text-4xl font-serif text-on-surface tracking-tight">ScribeSoul</h1>
+          </div>
+          
+          <h2 className="text-5xl md:text-7xl font-serif text-on-surface leading-[1.1] tracking-tight text-balance">
+            Nơi ngôn từ tìm thấy <span className="italic text-primary">linh hồn</span> của mình.
+          </h2>
+          
+          <p className="font-sans text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed text-balance">
+            Nền tảng viết lách tích hợp AI giúp bạn vượt qua nỗi sợ trang giấy trắng và kiến tạo những thế giới phi thường.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 pt-8">
+          <Link href="/workspace/default" className="w-full sm:w-auto h-14 px-8 flex items-center justify-center space-x-3 rounded-full bg-primary text-primary-foreground hover:bg-on-surface transition-all shadow-xl shadow-primary/20 group">
+            <span className="font-sans font-semibold tracking-wide">Vào thư viện của bạn</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          
+          <Link href="/login" className="w-full sm:w-auto h-14 px-8 flex items-center justify-center space-x-3 rounded-full bg-surface-container-low dark:bg-surface-container-high border border-border/10 hover:bg-surface-container-high transition-all group">
+            <Sparkles className="w-4 h-4 text-secondary" />
+            <span className="font-sans font-medium text-on-surface">Khám phá Soul Assistant</span>
+          </Link>
         </div>
-      </main>
-    </div>
+
+        <div className="pt-24 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+          <div className="space-y-3">
+            <h3 className="font-serif text-xl text-on-surface">Silent Manuscript</h3>
+            <p className="font-sans text-sm text-on-surface-variant leading-relaxed">
+              Giao diện tối giản, loại bỏ mọi xao nhãng để bạn tập trung hoàn toàn vào dòng chảy sáng tạo.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <h3 className="font-serif text-xl text-on-surface">Deep Space AI</h3>
+            <p className="font-sans text-sm text-on-surface-variant leading-relaxed">
+              Trợ lý AI thấu hiểu bối cảnh, nhân vật và cốt truyện của bạn như một người bạn đồng hành.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <h3 className="font-serif text-xl text-on-surface">Mạng lưới kiến thức</h3>
+            <p className="font-sans text-sm text-on-surface-variant leading-relaxed">
+              Tự động kết nối và trực quan hóa các thực thể trong câu chuyện qua bộ não Vector thông minh.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
