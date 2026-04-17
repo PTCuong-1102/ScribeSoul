@@ -2,9 +2,9 @@
 
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
-import { documents, docTypeEnum, docStatusEnum } from "@/lib/db/schema/documents"
+import { documents } from "@/lib/db/schema/documents"
 import { workspaces } from "@/lib/db/schema/workspaces"
-import { eq, and, asc, desc, ilike } from "drizzle-orm"
+import { eq, and, asc, ilike } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 

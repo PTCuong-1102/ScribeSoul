@@ -8,7 +8,6 @@ import { eq, asc } from "drizzle-orm"
 /**
  * Converts BlockNote JSON blocks to a basic Markdown string.
  */
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 interface BlockData {
   type: string;
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -17,6 +16,7 @@ interface BlockData {
 
 function blocksToMarkdown(documentBlocks: BlockData[]): string {
   return documentBlocks.map(block => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const text = block.content?.map((c: any) => c.text || "").join('') || '';
     
     switch (block.type) {

@@ -3,9 +3,8 @@
 import { db } from "@/lib/db"
 import { blocks } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
-import { eq, asc, and } from "drizzle-orm"
+import { eq, asc } from "drizzle-orm"
 import { auth } from "@/auth"
-import { workspaces } from "@/lib/db/schema/workspaces"
 
 async function validateDocumentAccess(documentId: string) {
   const session = await auth()

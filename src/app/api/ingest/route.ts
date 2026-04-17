@@ -40,6 +40,7 @@ export async function POST(req: Request) {
     if (currentBlocks.length === 0) return NextResponse.json({ success: true, message: "No content to ingest" })
 
     // 1. Chunking
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chunks = chunkBlocks(documentId, currentBlocks as any)
 
     // 2. Generate Embeddings

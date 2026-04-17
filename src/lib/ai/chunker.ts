@@ -11,11 +11,6 @@ export interface Chunk {
   };
 }
 
-interface BlockFragment {
-  text?: string;
-  [key: string]: unknown;
-}
-
 interface BasicBlock {
   id: string;
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */

@@ -5,8 +5,18 @@ import { getBacklinks } from '@/server/actions/links'
 import { FileText, Link as LinkIcon } from 'lucide-react'
 import Link from 'next/link'
 
+interface Backlink {
+  id: string;
+  type: string;
+  source: {
+    id: string;
+    title: string | null;
+    workspaceId: string;
+  };
+}
+
 export function BacklinksPanel({ documentId }: { documentId: string }) {
-  const [backlinks, setBacklinks] = useState<any[]>([])
+  const [backlinks, setBacklinks] = useState<Backlink[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

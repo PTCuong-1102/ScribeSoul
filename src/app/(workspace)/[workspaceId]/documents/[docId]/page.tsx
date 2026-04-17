@@ -3,7 +3,7 @@ import BlockEditor from '@/components/editor/BlockEditor'
 import { ChatInterface } from '@/components/ai/ChatInterface'
 import { CommandSearch } from '@/components/search/CommandSearch'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Save, History, ChevronRight, Share2 } from 'lucide-react'
+import { Sparkles, Save, History } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function DocumentPage({ params }: { params: { workspaceId: string, docId: string } }) {

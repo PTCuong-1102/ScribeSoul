@@ -61,6 +61,7 @@ export default function BlockEditor({ initialContent, onChange }: BlockEditorPro
   const soulWrite = async (editor: BlockNoteEditor) => {
     const currentBlock = editor.getTextCursorPosition().block;
     const prevBlocks = editor.document.slice(0, editor.document.indexOf(currentBlock) + 1);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const context = prevBlocks.map(b => (b.content as any)?.[0]?.text || "").join("\n");
     
     // Insert a temporary "AI is writing..." block or similar
@@ -75,6 +76,7 @@ export default function BlockEditor({ initialContent, onChange }: BlockEditorPro
       const response = await fetch("/api/ai/autocomplete", {
         method: "POST",
         body: JSON.stringify({ 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           prompt: (currentBlock.content as any)?.[0]?.text || "",
           context 
         }),
