@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#c8c6c5",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-fixed": "#25005a",
+                        "on-surface": "#1b1c19",
+                        "on-error": "#ffffff",
+                        "primary-container": "#676666",
+                        "on-secondary": "#ffffff",
+                        "outline": "#7b7487",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#4a4455",
+                        "on-secondary-container": "#fffbff",
+                        "on-background": "#1b1c19",
+                        "secondary-fixed": "#eaddff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "on-tertiary-fixed": "#301400",
+                        "surface-container-high": "#eae8e3",
+                        "secondary-fixed-dim": "#d2bbff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#712ae2",
+                        "on-secondary-fixed-variant": "#5a00c6",
+                        "surface-variant": "#e4e2dd",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#ffdcc6",
+                        "tertiary-container": "#a15100",
+                        "surface-container-highest": "#e4e2dd",
+                        "inverse-surface": "#30312e",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "surface-container": "#f0eee9",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fbf9f4",
+                        "primary-fixed": "#e5e2e1",
+                        "outline-variant": "#ccc3d8",
+                        "secondary-container": "#8a4cfc",
+                        "background": "#fbf9f4",
+                        "surface-tint": "#5f5e5e",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-container": "#e8e5e4",
+                        "on-tertiary-container": "#ffe0cd",
+                        "primary": "#4f4e4e",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface": "#fbf9f4",
+                        "on-primary-fixed-variant": "#474746",
+                        "tertiary": "#7d3d00",
+                        "surface-container-low": "#f5f3ee",
+                        "on-primary-fixed": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Newsreader"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editor-container {
+            line-height: 1.7;
+        }
+        .ai-glow {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+        }
+        .glass-menu {
+            background-color: rgba(228, 226, 221, 0.6);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-secondary-fixed">
+<div class="flex h-screen overflow-hidden">
+<!-- Left: SideNavBar (The Curator's Console) -->
+<aside class="hidden md:flex flex-col h-full border-r border-black/5 bg-[#f5f3ee] w-64">
+<!-- Header Identity -->
+<div class="px-8 py-10">
+<h1 class="text-lg font-serif italic text-[#4f4e4e]">ScribeSoul</h1>
+<p class="text-[10px] font-semibold uppercase tracking-wider text-[#4f4e4e]/50 mt-1">The Curator</p>
+</div>
+<!-- Primary Navigation -->
+<nav class="flex-1 px-4 space-y-1">
+<div class="mb-6 px-4">
+<button class="w-full py-3 px-4 bg-primary text-on-primary rounded-md text-xs font-semibold uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">edit</span>
+                        Write New
+                    </button>
+</div>
+<div class="space-y-1">
+<a class="flex items-center gap-4 px-4 py-3 text-[#4f4e4e] border-r-2 border-[#7C3AED] bg-[#eae8e3] text-sm font-semibold uppercase tracking-wider transition-all translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+                        Chapters
+                    </a>
+<a class="flex items-center gap-4 px-4 py-3 text-[#4f4e4e]/50 hover:bg-[#eae8e3] text-sm font-semibold uppercase tracking-wider transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person_4">person_4</span>
+                        Characters
+                    </a>
+<a class="flex items-center gap-4 px-4 py-3 text-[#4f4e4e]/50 hover:bg-[#eae8e3] text-sm font-semibold uppercase tracking-wider transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+                        Locations
+                    </a>
+<a class="flex items-center gap-4 px-4 py-3 text-[#4f4e4e]/50 hover:bg-[#eae8e3] text-sm font-semibold uppercase tracking-wider transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+                        Research
+                    </a>
+</div>
+</nav>
+<!-- User Context -->
+<div class="p-6 border-t border-black/5">
+<div class="flex items-center gap-3 px-2 mb-6">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close-up portrait of a thoughtful author in a library with warm bokeh lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVRHiX551cidWWvEP_XzBSveJGJgA7FtA-K576y1k_plird7uAgnIfGibTGnBzvD5XO4a1bhxyUogyhUDyLk-y-YhiWEnKjVczHJySJDwX3GARCPUJqn3J4mcdv0kB5V0wlnQLGfOgizTQRZ0ojphbaelRtMHo98LJAZYmFNRTH8y_q-y6sBSrzUfzdoQJuqnCpP0iAAwhS0gOeiWr8CN1d4MRYuCWCtKag9rBqgiOEnLMUBYYuV4IWafmeFlm1JMmKFOzuZr3zcKs"/>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Author Profile</p>
+</div>
+</div>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-2 py-1 text-[#4f4e4e]/50 hover:text-on-surface text-xs font-semibold uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
+                        Settings
+                    </a>
+<a class="flex items-center gap-3 px-2 py-1 text-[#4f4e4e]/50 hover:text-on-surface text-xs font-semibold uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="help">help</span>
+                        Help
+                    </a>
+</div>
+</div>
+</aside>
+<!-- Center: Main Editor Workspace -->
+<main class="flex-1 relative bg-surface overflow-y-auto custom-scrollbar">
+<!-- Top Bar Shell (Identity & Library Context) -->
+<header class="sticky top-0 z-30 flex justify-between items-center px-8 py-4 w-full bg-[#fbf9f4] border-none">
+<div class="flex items-center gap-8">
+<div class="text-xl font-medium font-serif text-[#4f4e4e] tracking-tight">ScribeSoul</div>
+<nav class="flex items-center gap-6">
+<a class="text-[#4f4e4e]/60 font-serif newsreader tracking-tight hover:text-[#7C3AED] transition-colors" href="#">Drafts</a>
+<a class="text-[#7C3AED] font-semibold font-serif newsreader tracking-tight border-b-2 border-[#7C3AED]" href="#">Library</a>
+<a class="text-[#4f4e4e]/60 font-serif newsreader tracking-tight hover:text-[#7C3AED] transition-colors" href="#">Archive</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#4f4e4e] cursor-pointer" data-icon="settings">settings</span>
+<span class="material-symbols-outlined text-[#4f4e4e] cursor-pointer" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<!-- The Manuscript Canvas -->
+<div class="max-w-[800px] mx-auto px-12 py-24 min-h-screen relative">
+<!-- Title Header -->
+<div class="mb-16">
+<h2 class="font-headline text-[3.5rem] leading-tight text-on-surface mb-2">The Silent Manuscript</h2>
+<div class="h-px w-24 bg-outline-variant opacity-20"></div>
+</div>
+<!-- Editor Text Content -->
+<div class="editor-container font-headline text-body-lg text-on-surface/90 space-y-8 text-lg">
+<p>
+                        The clock in the library didn't tick; it breathed. Each stroke of the mahogany pendulum seemed to inhale the dust of ancient folios and exhale a silence so profound it felt like a physical weight upon the shoulders. Julian sat at the desk, his fingers hovering above the parchment, afraid that the mere act of writing would shatter the fragile peace of the room.
+                    </p>
+<p>
+                        He looked toward the window where the <span class="bg-secondary-fixed/50 border-b border-secondary/30 relative group cursor-text">winter moon</span> was hanging low over the manor's sprawling gardens. 
+                        <!-- Bubble Menu (Visible on Highlight) -->
+</p><div class="absolute -mt-36 ml-4 z-40">
+<div class="glass-menu rounded-xl shadow-[0px_10px_30px_rgba(27,28,25,0.06)] flex items-center p-1.5 gap-1 border border-outline-variant/15">
+<button class="p-2 hover:bg-surface-bright rounded-lg text-secondary transition-colors">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">colors_spark</span>
+</button>
+<div class="w-px h-4 bg-outline-variant/20 mx-1"></div>
+<button class="p-2 hover:bg-surface-bright rounded-lg text-on-surface/70"><span class="material-symbols-outlined text-sm">format_bold</span></button>
+<button class="p-2 hover:bg-surface-bright rounded-lg text-on-surface/70"><span class="material-symbols-outlined text-sm">format_italic</span></button>
+<button class="p-2 hover:bg-surface-bright rounded-lg text-on-surface/70"><span class="material-symbols-outlined text-sm">link</span></button>
+<button class="p-2 hover:bg-surface-bright rounded-lg text-on-surface/70"><span class="material-symbols-outlined text-sm">comment</span></button>
+</div>
+<div class="w-3 h-3 glass-menu rotate-45 mx-auto -mt-1.5 border-r border-b border-outline-variant/15"></div>
+</div>
+                        Everything was precisely where it should be, yet something felt fundamentally altered. The shadows between the shelves were longer than they had been an hour ago, stretching like ink stains across the floor.
+                    <p></p>
+<p>
+                        The antagonist had moved with a surgeon's precision. There were no broken locks, no ruffled papers. Only the void where the obsidian dagger had once rested.
+                    </p>
+<!-- Slash Menu Prompt -->
+<div class="relative pt-4 flex items-center gap-3">
+<span class="text-secondary/60 animate-pulse">|</span>
+<div class="absolute top-12 left-0 z-40 w-64 glass-menu rounded-xl border border-outline-variant/15 shadow-[0px_10px_30px_rgba(27,28,25,0.06)] overflow-hidden">
+<div class="p-3">
+<p class="text-[10px] font-semibold uppercase tracking-widest text-on-surface/40 mb-2">Write with AI</p>
+<div class="space-y-1">
+<div class="flex items-center gap-3 p-2 hover:bg-surface-bright rounded-lg cursor-pointer group">
+<span class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-xs font-medium text-on-surface/80">Continue writing</span>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-surface-bright rounded-lg cursor-pointer">
+<span class="material-symbols-outlined text-on-surface/50 text-sm">format_list_bulleted</span>
+<span class="text-xs font-medium text-on-surface/80">Bulleted list</span>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-surface-bright rounded-lg cursor-pointer">
+<span class="material-symbols-outlined text-on-surface/50 text-sm">image</span>
+<span class="text-xs font-medium text-on-surface/80">Image placeholder</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Resizable Handle (Visual) -->
+<div class="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-1 items-center opacity-20">
+<div class="w-1 h-1 rounded-full bg-outline"></div>
+</div>
+</div>
+</main>
+<!-- Right: AI Assistant Drawer -->
+<aside class="w-80 h-full bg-surface-container-low border-l border-black/5 flex flex-col">
+<!-- Header -->
+<div class="px-6 py-8 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary ai-glow"></div>
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface/60">Soul Assistant</span>
+</div>
+<button class="text-on-surface/40 hover:text-on-surface">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+<!-- Chat History / Content -->
+<div class="flex-1 px-6 overflow-y-auto space-y-6">
+<!-- User Question -->
+<div class="space-y-2">
+<div class="text-[10px] font-bold uppercase tracking-tighter text-on-surface/30">Your Inquiry</div>
+<div class="p-4 bg-surface-container-lowest rounded-xl text-sm font-medium text-on-surface/80">
+                        Where did the antagonist hide the weapon?
+                    </div>
+</div>
+<!-- AI Response -->
+<div class="space-y-4">
+<div class="text-[10px] font-bold uppercase tracking-tighter text-secondary/60">Analysis</div>
+<div class="ai-glow p-5 bg-surface-container-lowest rounded-xl relative overflow-hidden">
+<!-- Subtle Background Gradient for AI -->
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent pointer-events-none"></div>
+<p class="text-sm font-headline italic leading-relaxed text-on-surface mb-4">
+                            "Based on the established geography of the estate and Julian's earlier discovery of the loosened floorboard in the conservatory, the antagonist likely concealed the dagger within the hollow base of the marble bust in <strong>The Manor's</strong> north wing."
+                        </p>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs text-secondary">link</span>
+<a class="text-[11px] font-semibold text-secondary hover:underline" href="#">[[Setting: The Manor]]</a>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 bg-secondary-container/10 text-secondary text-[10px] font-bold uppercase tracking-wider rounded-md hover:bg-secondary-container/20 transition-colors">Apply to draft</button>
+<button class="px-3 py-1.5 border border-outline-variant/20 text-on-surface/60 text-[10px] font-bold uppercase tracking-wider rounded-md hover:bg-surface transition-colors">Regenerate</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Suggestion Chips -->
+<div class="pt-4 border-t border-black/5 space-y-3">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface/30">Deepen the Mystery</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-2 bg-surface-container rounded-full text-[10px] font-medium text-on-surface/70 cursor-pointer hover:bg-surface-bright transition-colors border border-outline-variant/10">Describe the dagger's aura</span>
+<span class="px-3 py-2 bg-surface-container rounded-full text-[10px] font-medium text-on-surface/70 cursor-pointer hover:bg-surface-bright transition-colors border border-outline-variant/10">Add a sensory detail about the Manor</span>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-6">
+<div class="relative">
+<textarea class="w-full bg-surface-container-highest border-none rounded-xl p-4 text-xs font-medium placeholder:text-on-surface/30 focus:ring-1 focus:ring-secondary/20 resize-none h-24" placeholder="Ask anything about your manuscript..."></textarea>
+<div class="absolute bottom-3 right-3 flex items-center gap-2">
+<button class="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Background Decorative Texture (Asymmetric Editorial Feel) -->
+<div class="fixed top-0 right-0 -z-10 w-1/3 h-full opacity-[0.03] pointer-events-none">
+<svg height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+<filter id="noiseFilter">
+<feturbulence basefrequency="0.65" numoctaves="3" stitchtiles="stitch" type="fractalNoise"></feturbulence>
+</filter>
+<rect filter="url(#noiseFilter)" height="100%" width="100%"></rect>
+</svg>
+</div>
+</body></html>

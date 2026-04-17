@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ScribeSoul AI Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#c8c6c5",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-fixed": "#25005a",
+                        "on-surface": "#1b1c19",
+                        "on-error": "#ffffff",
+                        "primary-container": "#676666",
+                        "on-secondary": "#ffffff",
+                        "outline": "#7b7487",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#4a4455",
+                        "on-secondary-container": "#fffbff",
+                        "on-background": "#1b1c19",
+                        "secondary-fixed": "#eaddff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "on-tertiary-fixed": "#301400",
+                        "surface-container-high": "#eae8e3",
+                        "secondary-fixed-dim": "#d2bbff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#712ae2",
+                        "on-secondary-fixed-variant": "#5a00c6",
+                        "surface-variant": "#e4e2dd",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#ffdcc6",
+                        "tertiary-container": "#a15100",
+                        "surface-container-highest": "#e4e2dd",
+                        "inverse-surface": "#30312e",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "surface-container": "#f0eee9",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fbf9f4",
+                        "primary-fixed": "#e5e2e1",
+                        "outline-variant": "#ccc3d8",
+                        "secondary-container": "#8a4cfc",
+                        "background": "#fbf9f4",
+                        "surface-tint": "#5f5e5e",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-container": "#e8e5e4",
+                        "on-tertiary-container": "#ffe0cd",
+                        "primary": "#4f4e4e",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface": "#fbf9f4",
+                        "on-primary-fixed-variant": "#474746",
+                        "tertiary": "#7d3d00",
+                        "surface-container-low": "#f5f3ee",
+                        "on-primary-fixed": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Newsreader"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .ai-glow {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #eae8e3; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #dbdad5; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-secondary/20 h-screen overflow-hidden">
+<div class="flex h-full w-full">
+<!-- SideNavBar (Shared Component) -->
+<aside class="flex flex-col h-full border-r border-black/5 dark:border-white/5 bg-[#f5f3ee] dark:bg-[#1E293B] w-64 shrink-0 hidden md:flex">
+<div class="p-6">
+<div class="text-lg font-serif italic text-[#4f4e4e] dark:text-white mb-2">ScribeSoul</div>
+<div class="text-[0.75rem] font-semibold uppercase tracking-wider text-[#4f4e4e]/50 dark:text-slate-500">The Curator</div>
+</div>
+<div class="px-3 mb-6">
+<button class="w-full py-3 px-4 rounded-xl bg-primary text-on-primary flex items-center justify-center gap-2 hover:opacity-90 transition-all font-label text-sm font-semibold uppercase tracking-wider">
+<span class="material-symbols-outlined text-sm">add</span>
+                    Write New
+                </button>
+</div>
+<nav class="flex-1 space-y-1 px-3">
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#4f4e4e]/50 dark:text-slate-500 hover:bg-[#eae8e3] dark:hover:bg-slate-800 transition-all cursor-pointer font-label text-sm font-semibold uppercase tracking-wider">
+<span class="material-symbols-outlined">menu_book</span>
+                    Chapters
+                </div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#4f4e4e]/50 dark:text-slate-500 hover:bg-[#eae8e3] dark:hover:bg-slate-800 transition-all cursor-pointer font-label text-sm font-semibold uppercase tracking-wider">
+<span class="material-symbols-outlined">person_4</span>
+                    Characters
+                </div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#4f4e4e]/50 dark:text-slate-500 hover:bg-[#eae8e3] dark:hover:bg-slate-800 transition-all cursor-pointer font-label text-sm font-semibold uppercase tracking-wider">
+<span class="material-symbols-outlined">map</span>
+                    Locations
+                </div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#4f4e4e]/50 dark:text-slate-500 hover:bg-[#eae8e3] dark:hover:bg-slate-800 transition-all cursor-pointer font-label text-sm font-semibold uppercase tracking-wider">
+<span class="material-symbols-outlined">database</span>
+                    Research
+                </div>
+</nav>
+<div class="mt-auto p-4 border-t border-black/5 space-y-1">
+<div class="flex items-center gap-3 px-4 py-2 rounded-lg text-[#4f4e4e]/50 dark:text-slate-500 hover:bg-[#eae8e3] transition-all cursor-pointer font-label text-xs font-semibold uppercase tracking-wider">
+<span class="material-symbols-outlined text-lg">settings</span>
+                    Settings
+                </div>
+<div class="flex items-center gap-3 px-4 py-2 rounded-lg text-[#4f4e4e]/50 dark:text-slate-500 hover:bg-[#eae8e3] transition-all cursor-pointer font-label text-xs font-semibold uppercase tracking-wider">
+<span class="material-symbols-outlined text-lg">help</span>
+                    Help
+                </div>
+<div class="mt-4 flex items-center gap-3 px-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img alt="Author Profile" class="w-full h-full object-cover" data-alt="professional portrait of a writer with soft focus background and natural daylighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApMV1FafmjNw7u3PcLbj8nGX6h5jls5PHTI0B96ClgLWRB-PQt0zZFBsouCwscFbbbTUhaWztnFGLLn2iEHANb8EZh1b4ytel-fLKX4Zt-T2j6Sms9yc27rEZiVJuAvi9KIejJnsw3nM_qyDHhPS2YfEdq1CZoKeyXsAc5LdcreJJW_iHuqzrtk_Jha7k8N30Z8O0i58k7xRIWivJ8KVMNdIX4KIX8p1WdemLrqXrPLubnDN1xpA5Yi8P7kpS5KqFy9AfRcpB0ofE_"/>
+</div>
+<div class="text-xs font-semibold text-on-surface-variant">Elias Vance</div>
+</div>
+</div>
+</aside>
+<!-- Chat History Sidebar (Specific to AI Chat) -->
+<aside class="w-72 bg-surface-container-low flex flex-col h-full shrink-0 hidden lg:flex">
+<div class="p-6 pb-2">
+<h2 class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 mb-6">Chat History</h2>
+<div class="space-y-6">
+<section>
+<h3 class="text-[10px] font-bold text-on-surface-variant/40 uppercase mb-3 px-2">Today</h3>
+<div class="space-y-1">
+<div class="group flex items-center justify-between px-3 py-2 bg-surface-container-highest rounded-lg cursor-pointer transition-all">
+<span class="text-sm font-medium text-on-surface truncate">Nam's Journey Holes</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">more_horiz</span>
+</div>
+<div class="group flex items-center justify-between px-3 py-2 hover:bg-surface-container-high rounded-lg cursor-pointer transition-all">
+<span class="text-sm text-on-surface-variant truncate">Prologue Style Check</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">more_horiz</span>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-[10px] font-bold text-on-surface-variant/40 uppercase mb-3 px-2">Yesterday</h3>
+<div class="space-y-1">
+<div class="group flex items-center justify-between px-3 py-2 hover:bg-surface-container-high rounded-lg cursor-pointer transition-all">
+<span class="text-sm text-on-surface-variant truncate">Antagonist Motivation</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">more_horiz</span>
+</div>
+<div class="group flex items-center justify-between px-3 py-2 hover:bg-surface-container-high rounded-lg cursor-pointer transition-all">
+<span class="text-sm text-on-surface-variant truncate">Chapter 4 World Building</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">more_horiz</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+<div class="mt-auto p-6">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-outline-variant/30 text-on-surface-variant text-xs font-semibold hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-sm">archive</span>
+                    View Archived
+                </button>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="flex-1 flex flex-col h-full bg-surface">
+<!-- TopNavBar (Shared Component Identity) -->
+<header class="flex justify-between items-center px-8 py-4 w-full bg-[#fbf9f4] dark:bg-[#0F172A] border-b border-black/5 z-10">
+<div class="flex items-center gap-4">
+<div class="lg:hidden">
+<span class="material-symbols-outlined text-on-surface-variant">menu</span>
+</div>
+<!-- Context Selector -->
+<div class="relative group">
+<button class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant text-sm font-medium hover:bg-surface-container-highest transition-all">
+<span class="material-symbols-outlined text-sm text-secondary">layers</span>
+                            Context: <span class="text-on-surface font-semibold">Full Project</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+</div>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<nav class="flex items-center gap-6">
+<a class="text-[#4f4e4e]/60 dark:text-slate-400 font-serif newsreader tracking-tight hover:text-[#7C3AED] transition-colors duration-200" href="#">Drafts</a>
+<a class="text-[#4f4e4e]/60 dark:text-slate-400 font-serif newsreader tracking-tight hover:text-[#7C3AED] transition-colors duration-200" href="#">Library</a>
+<a class="text-[#4f4e4e]/60 dark:text-slate-400 font-serif newsreader tracking-tight hover:text-[#7C3AED] transition-colors duration-200" href="#">Archive</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-colors">settings</button>
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs font-bold">EV</div>
+</div>
+</header>
+<!-- Chat Interface -->
+<div class="flex-1 overflow-y-auto px-6 py-12 flex flex-col items-center">
+<div class="w-full max-w-3xl space-y-10">
+<!-- Date Separator -->
+<div class="flex items-center justify-center gap-4 opacity-30">
+<div class="h-px flex-1 bg-on-surface-variant"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest">April 13, 2024</span>
+<div class="h-px flex-1 bg-on-surface-variant"></div>
+</div>
+<!-- User Message -->
+<div class="flex flex-col items-end animate-in fade-in slide-in-from-bottom-4 duration-500">
+<div class="max-w-[85%] bg-surface-container-lowest px-6 py-4 rounded-2xl rounded-tr-none shadow-sm border border-outline-variant/10">
+<p class="text-on-surface leading-relaxed text-lg font-headline italic">
+                                Check for plot holes in Nam's journey on April 13th.
+                            </p>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant/40 mt-2 px-2 uppercase tracking-tighter">Delivered</span>
+</div>
+<!-- AI Message -->
+<div class="flex flex-col items-start animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
+<div class="flex gap-4 max-w-full">
+<div class="w-8 h-8 rounded-full bg-secondary shrink-0 flex items-center justify-center ai-glow">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="flex-1 space-y-4">
+<div class="bg-surface-container-low px-6 py-6 rounded-2xl rounded-tl-none border-l-4 border-secondary/20 shadow-sm">
+<div class="flex items-center gap-2 mb-4 text-secondary">
+<span class="material-symbols-outlined text-lg">warning</span>
+<span class="font-label text-xs font-bold uppercase tracking-widest">Conflict Detected</span>
+</div>
+<p class="text-on-surface leading-relaxed text-lg font-headline mb-6">
+                                        I've identified a temporal paradox in Nam's timeline. On April 13th, you have him reaching the <span class="text-secondary font-semibold italic underline decoration-secondary/30">Opal Spires</span> by midday, but this contradicts his position at dawn.
+                                    </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="p-4 rounded-xl bg-surface-container-highest/50 border border-outline-variant/20 group hover:border-secondary/40 transition-all cursor-pointer">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">description</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Reference</span>
+</div>
+<h4 class="text-sm font-semibold text-on-surface">[[Chapter 2]]</h4>
+<p class="text-xs text-on-surface-variant mt-1 italic">"The mountain pass is a three-day march from the border."</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-highest/50 border border-outline-variant/20 group hover:border-secondary/40 transition-all cursor-pointer">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">description</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Reference</span>
+</div>
+<h4 class="text-sm font-semibold text-on-surface">[[Chapter 5]]</h4>
+<p class="text-xs text-on-surface-variant mt-1 italic">"Nam crossed the border at 05:00 on the 13th."</p>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-outline-variant/20 flex flex-wrap gap-2">
+<button class="px-4 py-2 rounded-full bg-secondary/10 text-secondary text-xs font-semibold hover:bg-secondary/20 transition-all">Rewrite Timeline</button>
+<button class="px-4 py-2 rounded-full bg-surface-container-highest text-on-surface-variant text-xs font-semibold hover:bg-surface-container-high transition-all">Explain Logistics</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Chat Input Area -->
+<footer class="w-full flex justify-center p-8 bg-gradient-to-t from-surface via-surface to-transparent">
+<div class="w-full max-w-3xl relative">
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-xl overflow-hidden focus-within:ring-2 focus-within:ring-secondary/20 transition-all">
+<textarea class="w-full p-6 pr-16 bg-transparent border-none focus:ring-0 resize-none text-on-surface font-headline italic text-lg" placeholder="Ask the Curator about your world..." rows="1"></textarea>
+<div class="flex items-center justify-between px-6 py-3 bg-surface-container-low/50">
+<div class="flex gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary text-xl transition-colors">attach_file</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary text-xl transition-colors">mic</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary text-xl transition-colors">image</button>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-40">GPT-4 Omni</span>
+<button class="w-10 h-10 rounded-xl bg-secondary text-white flex items-center justify-center hover:bg-secondary-container transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Context Suggestion -->
+<div class="absolute -top-10 left-0 flex gap-2">
+<span class="px-3 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full cursor-pointer hover:bg-secondary/20 transition-all">Analyze Chapter 5</span>
+<span class="px-3 py-1 bg-on-surface-variant/5 text-on-surface-variant text-[10px] font-bold rounded-full cursor-pointer hover:bg-on-surface-variant/10 transition-all">Summon "Nam"</span>
+</div>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

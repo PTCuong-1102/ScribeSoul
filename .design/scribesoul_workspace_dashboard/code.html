@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#c8c6c5",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-fixed": "#25005a",
+                        "on-surface": "#1b1c19",
+                        "on-error": "#ffffff",
+                        "primary-container": "#676666",
+                        "on-secondary": "#ffffff",
+                        "outline": "#7b7487",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#4a4455",
+                        "on-secondary-container": "#fffbff",
+                        "on-background": "#1b1c19",
+                        "secondary-fixed": "#eaddff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "on-tertiary-fixed": "#301400",
+                        "surface-container-high": "#eae8e3",
+                        "secondary-fixed-dim": "#d2bbff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#712ae2",
+                        "on-secondary-fixed-variant": "#5a00c6",
+                        "surface-variant": "#e4e2dd",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#ffdcc6",
+                        "tertiary-container": "#a15100",
+                        "surface-container-highest": "#e4e2dd",
+                        "inverse-surface": "#30312e",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "surface-container": "#f0eee9",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fbf9f4",
+                        "primary-fixed": "#e5e2e1",
+                        "outline-variant": "#ccc3d8",
+                        "secondary-container": "#8a4cfc",
+                        "background": "#fbf9f4",
+                        "surface-tint": "#5f5e5e",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-container": "#e8e5e4",
+                        "on-tertiary-container": "#ffe0cd",
+                        "primary": "#4f4e4e",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface": "#fbf9f4",
+                        "on-primary-fixed": "#1c1b1b",
+                        "tertiary": "#7d3d00",
+                        "surface-container-low": "#f5f3ee",
+                        "on-primary-fixed-variant": "#474746"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Newsreader"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .serif-anchor { font-family: 'Newsreader', serif; }
+        .glass-panel {
+            background: rgba(240, 238, 233, 0.6);
+            backdrop-filter: blur(10px);
+        }
+        .ai-glow {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-secondary-fixed">
+<div class="flex min-h-screen">
+<!-- SideNavBar Component -->
+<aside class="hidden md:flex flex-col h-screen w-64 bg-[#f5f3ee] border-r border-black/5 flex-shrink-0 sticky top-0 overflow-y-auto">
+<div class="px-8 py-10 flex flex-col items-start gap-1">
+<span class="text-lg font-serif italic text-[#4f4e4e]">ScribeSoul</span>
+<span class="font-sans text-sm font-semibold uppercase tracking-wider text-[#4f4e4e]/50">The Curator</span>
+</div>
+<div class="px-6 mb-8">
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-md font-label text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Write New
+                </button>
+</div>
+<nav class="flex-grow">
+<ul class="flex flex-col gap-1">
+<!-- Tab: Chapters (Active fallback for Workspace) -->
+<li>
+<a class="flex items-center gap-4 px-8 py-3 text-[#4f4e4e] border-r-2 border-[#7C3AED] bg-[#eae8e3] font-sans text-sm font-semibold uppercase tracking-wider transition-all translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Chapters</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-8 py-3 text-[#4f4e4e]/50 hover:bg-[#eae8e3] font-sans text-sm font-semibold uppercase tracking-wider transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person_4">person_4</span>
+<span>Characters</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-8 py-3 text-[#4f4e4e]/50 hover:bg-[#eae8e3] font-sans text-sm font-semibold uppercase tracking-wider transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span>Locations</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-8 py-3 text-[#4f4e4e]/50 hover:bg-[#eae8e3] font-sans text-sm font-semibold uppercase tracking-wider transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span>Research</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="mt-auto border-t border-black/5 pb-8">
+<ul class="flex flex-col gap-1 pt-4">
+<li>
+<a class="flex items-center gap-4 px-8 py-3 text-[#4f4e4e]/50 hover:bg-[#eae8e3] font-sans text-sm font-semibold uppercase tracking-wider transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-8 py-3 text-[#4f4e4e]/50 hover:bg-[#eae8e3] font-sans text-sm font-semibold uppercase tracking-wider transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Help</span>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-grow p-8 lg:p-12 max-w-7xl mx-auto overflow-x-hidden">
+<!-- Top Header (Contextual) -->
+<header class="flex justify-between items-end mb-16">
+<div>
+<span class="font-label text-xs uppercase tracking-[0.2em] text-outline mb-2 block">Personal Library</span>
+<h1 class="text-5xl font-headline text-on-surface leading-none">Workspace</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer" data-icon="search">search</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/10">
+<span class="material-symbols-outlined text-primary" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</header>
+<div class="grid grid-cols-12 gap-8">
+<!-- Recent Drafts Section -->
+<section class="col-span-12 lg:col-span-8">
+<div class="flex justify-between items-center mb-8">
+<h2 class="text-2xl font-headline">Recent Drafts</h2>
+<a class="text-sm font-label text-secondary hover:underline transition-all" href="#">View Archive</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Draft Card 1 -->
+<div class="group bg-surface-container-lowest p-6 rounded-lg transition-all hover:translate-y-[-4px] hover:shadow-[0_10px_30px_rgba(27,28,25,0.04)] border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-surface-container text-on-surface-variant text-[10px] uppercase font-bold px-2 py-1 tracking-widest rounded-sm">Act I</span>
+<span class="text-[10px] text-outline font-label">2h ago</span>
+</div>
+<h3 class="text-xl font-headline mb-3 text-on-surface group-hover:text-secondary transition-colors">The Weaver's Paradox</h3>
+<p class="text-on-surface-variant/80 text-sm leading-relaxed font-headline italic mb-6">"Silence was not the absence of sound, but the presence of a thousand unspoken fears lurking..."</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[11px] font-label text-outline uppercase tracking-tighter">Drafting</span>
+</div>
+</div>
+<!-- Draft Card 2 -->
+<div class="group bg-surface-container-lowest p-6 rounded-lg transition-all hover:translate-y-[-4px] hover:shadow-[0_10px_30px_rgba(27,28,25,0.04)] border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-surface-container text-on-surface-variant text-[10px] uppercase font-bold px-2 py-1 tracking-widest rounded-sm">Chapter 4</span>
+<span class="text-[10px] text-outline font-label">Yesterday</span>
+</div>
+<h3 class="text-xl font-headline mb-3 text-on-surface group-hover:text-secondary transition-colors">Echoes of the Spire</h3>
+<p class="text-on-surface-variant/80 text-sm leading-relaxed font-headline italic mb-6">"The brass gears churned with a rhythm that felt like heartbeat, ancient and metal..."</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-[11px] font-label text-outline uppercase tracking-tighter">Revision</span>
+</div>
+</div>
+<!-- Draft Card 3 -->
+<div class="group bg-surface-container-lowest p-6 rounded-lg transition-all hover:translate-y-[-4px] hover:shadow-[0_10px_30px_rgba(27,28,25,0.04)] border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-surface-container text-on-surface-variant text-[10px] uppercase font-bold px-2 py-1 tracking-widest rounded-sm">Prolog</span>
+<span class="text-[10px] text-outline font-label">3 days ago</span>
+</div>
+<h3 class="text-xl font-headline mb-3 text-on-surface group-hover:text-secondary transition-colors">Salt &amp; Stardust</h3>
+<p class="text-on-surface-variant/80 text-sm leading-relaxed font-headline italic mb-6">"Every sailor knew the taste of the North Sea, but few knew the taste of the stars..."</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="text-[11px] font-label text-outline uppercase tracking-tighter">Finished</span>
+</div>
+</div>
+<!-- Draft Card 4 -->
+<div class="group bg-surface-container-lowest p-6 rounded-lg transition-all hover:translate-y-[-4px] hover:shadow-[0_10px_30px_rgba(27,28,25,0.04)] border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-surface-container text-on-surface-variant text-[10px] uppercase font-bold px-2 py-1 tracking-widest rounded-sm">Fragment</span>
+<span class="text-[10px] text-outline font-label">1 week ago</span>
+</div>
+<h3 class="text-xl font-headline mb-3 text-on-surface group-hover:text-secondary transition-colors">The Crimson Quill</h3>
+<p class="text-on-surface-variant/80 text-sm leading-relaxed font-headline italic mb-6">"Ink blotted across the parchment like a shadow creeping across a sundial..."</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+<span class="text-[11px] font-label text-outline uppercase tracking-tighter">Idea</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Knowledge Mini-Graph Section -->
+<section class="col-span-12 lg:col-span-4">
+<div class="sticky top-12">
+<div class="flex justify-between items-center mb-8">
+<h2 class="text-2xl font-headline">Knowledge Web</h2>
+<button class="text-on-surface-variant/40 hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="fullscreen">fullscreen</span>
+</button>
+</div>
+<div class="relative bg-surface-container-high rounded-xl overflow-hidden h-[450px] border border-outline-variant/10 flex items-center justify-center ai-glow">
+<!-- Visual Representation of Graph -->
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<img alt="abstract network diagram" data-alt="abstract minimalist connecting lines and dots graph pattern on paper texture subtle ink drawing aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu0LGuc7XQuEKQ0Dr3PjZfNienDnrgY6viUpPyBUzyMKj7hYmEYS_rTis3QhIwBVtdEsBwqo5TQ7bgjmAc_oiN6fNRKCxZ18BnVBPX_IdZieyC1ZfhDBr61YyPGXd46F2QRmHauhSu2xqYDabynw8veBd0AwrVLTMszCIcm1Z7EDArLY5cl3V3rWXwAQV4qls9BZVF7U_YN3hjisG5Y2g3UyVQtDcam09AEFF5HFY-YIBpnAp7urCXAVIWYkQJx1OEjK_gZqR0yrEI"/>
+</div>
+<!-- Mock Nodes -->
+<div class="relative w-full h-full p-8 flex items-center justify-center">
+<svg class="absolute inset-0 w-full h-full opacity-30" viewbox="0 0 400 450">
+<line stroke="currentColor" stroke-width="1" x1="200" x2="100" y1="225" y2="150"></line>
+<line stroke="currentColor" stroke-width="1" x1="200" x2="300" y1="225" y2="180"></line>
+<line stroke="currentColor" stroke-width="1" x1="200" x2="220" y1="225" y2="340"></line>
+<line stroke="currentColor" stroke-dasharray="4" stroke-width="0.5" x1="100" x2="300" y1="150" y2="180"></line>
+</svg>
+<!-- Central Node -->
+<div class="absolute z-10 p-3 bg-secondary rounded-full text-white shadow-lg cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<div class="absolute top-12 left-1/2 -translate-x-1/2 bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant/20 whitespace-nowrap text-[10px] font-label text-on-surface">Chapter 3</div>
+</div>
+<!-- Peripheral Node 1 -->
+<div class="absolute top-1/4 left-1/4 z-10 p-2 bg-surface-container-lowest border border-secondary rounded-full text-secondary shadow-sm cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[18px]" data-icon="person_4">person_4</span>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant/20 whitespace-nowrap text-[10px] font-label text-on-surface">Elias Thorne</div>
+</div>
+<!-- Peripheral Node 2 -->
+<div class="absolute top-1/3 right-1/4 z-10 p-2 bg-surface-container-lowest border border-secondary rounded-full text-secondary shadow-sm cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[18px]" data-icon="map">map</span>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant/20 whitespace-nowrap text-[10px] font-label text-on-surface">Iron Spire</div>
+</div>
+<!-- Peripheral Node 3 -->
+<div class="absolute bottom-1/4 left-1/2 z-10 p-2 bg-surface-container-lowest border border-outline-variant/10 rounded-full text-outline shadow-sm cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[18px]" data-icon="database">database</span>
+<div class="absolute top-10 left-1/2 -translate-x-1/2 bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant/20 whitespace-nowrap text-[10px] font-label text-on-surface">Steam Mechanics</div>
+</div>
+</div>
+<!-- Legend/Floating UI -->
+<div class="absolute bottom-4 left-4 right-4 glass-panel p-3 rounded-lg border border-outline-variant/10">
+<div class="flex justify-between items-center">
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<span class="text-[9px] uppercase font-bold tracking-widest text-on-surface-variant">Active Entity</span>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-outline"></div>
+<span class="text-[9px] uppercase font-bold tracking-widest text-on-surface-variant">Reference</span>
+</div>
+</div>
+<span class="text-[10px] font-label italic text-secondary">AI Analyzing links...</span>
+</div>
+</div>
+</div>
+<!-- Mini Stats or Insight -->
+<div class="mt-6 p-6 bg-surface-container rounded-lg">
+<h4 class="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-2">Curator Insight</h4>
+<p class="text-sm font-headline italic leading-snug text-on-surface">"Elias Thorne's presence in Chapter 3 creates a thematic tension with the Iron Spire setting. Consider strengthening the visual metaphors of rust."</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Library Bento Snippets -->
+<section class="mt-16 pt-16 border-t border-black/5">
+<div class="flex justify-between items-center mb-8">
+<h2 class="text-2xl font-headline">World Building Snippets</h2>
+<button class="material-symbols-outlined text-outline" data-icon="grid_view">grid_view</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="h-48 bg-surface-container-low rounded-lg overflow-hidden relative group border border-outline-variant/5">
+<img alt="vintage sketch" class="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" data-alt="vintage sketchbook drawing of a mythical creature ink and parchment texture with detailed crosshatching" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBItilovfbsP3_LT0Y4s2SZl-6zxa8VkT02yQcwkjhrt2UJOxg6cNJU6yGc9j-RoWVF2bXZfDxuO8UO-0TYZW623752fHq1_0LtIS9ZHCYMDYrx2qaoliTlgtoXNiJlRrVxSpnzQ_bZZLiBnhF2B2aDkuvnZ3WADDulydAF4ffnvfEFMwPlzh5QmxzZfZ7XzEzAMI92CUafWPk_Z8fQBpfGw3AfJ3CIJlfpyoqUsp-83MaFzar63Vu-C_ttdasTMGI9FXXuv3Pi4X_6"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<span class="text-[10px] font-label uppercase tracking-widest text-outline">Creature Design</span>
+<p class="font-headline text-lg">The Silt-Stepper</p>
+</div>
+</div>
+<div class="h-48 bg-surface-container-low rounded-lg overflow-hidden relative group border border-outline-variant/5">
+<img alt="old map" class="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" data-alt="old hand-drawn map of an island archipelago antique parchment aesthetic with faded ink and compass rose" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0novWjZwtqi7W6qo87UqlM9YrS7vPJyAq0fYCWe-RnUjH7zOp0JfHpQNox-HARISOzoEVVfCpmnTloE6dHUYRZXDoezPg0QgDGquRc40i1gvvsJJae3zI2b86FHk1lXvJipMuZzuUgkkhnSlAKDZ2OiZmoJ1EC2F4KxZdYVdSJ8GybC4vOAJvJZoOKom-IAw9ShQh9H95-A-Mshc4etQ0SX_mp-Nr8K3DRJGh5YY9RCowcs_pR-_gXElWu5wcg_jfrz76CWE8KEXp"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<span class="text-[10px] font-label uppercase tracking-widest text-outline">Geography</span>
+<p class="font-headline text-lg">Southern Reach</p>
+</div>
+</div>
+<div class="h-48 bg-surface-container-low rounded-lg overflow-hidden relative group border border-outline-variant/5">
+<img alt="writing desk" class="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" data-alt="close-up of an ornate fountain pen resting on heavy stationery warm soft morning light and elegant shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp5eZTBP4a2Xg4TAtV2NgoE7HTcVU1yirGhBAArTsjxZQUQjTMRK2jaG7ezet0Uzht6qExhjxKGSmaLo2nMB6F8MoOG85mtMruT4FgqQKo4gtSlvaS-Z5vy6KwiZiKh_OfoHrrZpQpcf7_9_nmqIdzKhlTXRQh7WQH6wxGetUYb0HHadWDX6-X3OwAKEdQLc3W59yrpQJbXHphZKLVu4bIJVAA-MjYB8XSotawEOe0hctdvXOodQZp8-1bjL2gjyskbH0X6pjlJ7bz"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<span class="text-[10px] font-label uppercase tracking-widest text-outline">Toolbox</span>
+<p class="font-headline text-lg">Narrative Beats</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Mobile Nav Bar (Suppressed as per rules if sub-page, but rendering as Top Level Destination) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-low border-t border-black/5 px-6 py-3 flex justify-around items-center z-50">
+<a class="flex flex-col items-center gap-1 text-secondary" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="text-[9px] font-label uppercase tracking-tighter">Drafts</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant/50" href="#">
+<span class="material-symbols-outlined" data-icon="person_4">person_4</span>
+<span class="text-[9px] font-label uppercase tracking-tighter">Cast</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant/50" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="text-[9px] font-label uppercase tracking-tighter">World</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant/50" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span class="text-[9px] font-label uppercase tracking-tighter">Notes</span>
+</a>
+</nav>
+</body></html>

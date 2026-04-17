@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ScribeSoul — Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#c8c6c5",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-fixed": "#25005a",
+                        "on-surface": "#1b1c19",
+                        "on-error": "#ffffff",
+                        "primary-container": "#676666",
+                        "on-secondary": "#ffffff",
+                        "outline": "#7b7487",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#4a4455",
+                        "on-secondary-container": "#fffbff",
+                        "on-background": "#1b1c19",
+                        "secondary-fixed": "#eaddff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "on-tertiary-fixed": "#301400",
+                        "surface-container-high": "#eae8e3",
+                        "secondary-fixed-dim": "#d2bbff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#712ae2",
+                        "on-secondary-fixed-variant": "#5a00c6",
+                        "surface-variant": "#e4e2dd",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#ffdcc6",
+                        "tertiary-container": "#a15100",
+                        "surface-container-highest": "#e4e2dd",
+                        "inverse-surface": "#30312e",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "surface-container": "#f0eee9",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fbf9f4",
+                        "primary-fixed": "#e5e2e1",
+                        "outline-variant": "#ccc3d8",
+                        "secondary-container": "#8a4cfc",
+                        "background": "#fbf9f4",
+                        "surface-tint": "#5f5e5e",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-container": "#e8e5e4",
+                        "on-tertiary-container": "#ffe0cd",
+                        "primary": "#4f4e4e",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface": "#fbf9f4",
+                        "on-primary-fixed": "#1c1b1b",
+                        "tertiary": "#7d3d00",
+                        "surface-container-low": "#f5f3ee",
+                        "on-primary-fixed-variant": "#474746"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Newsreader", "serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fbf9f4;
+        }
+        .serif-text {
+            font-family: 'Newsreader', serif;
+        }
+    </style>
+</head>
+<body class="text-on-surface antialiased overflow-hidden">
+<main class="flex h-screen w-full">
+<!-- Left Section: Login Form -->
+<section class="w-full md:w-[450px] lg:w-[500px] xl:w-[600px] flex flex-col justify-between p-8 md:p-12 lg:p-16 bg-surface z-10">
+<!-- Brand Logo -->
+<div class="flex items-center gap-2">
+<span class="serif-text text-2xl font-medium tracking-tight text-primary">ScribeSoul</span>
+</div>
+<!-- Form Content -->
+<div class="flex-grow flex flex-col justify-center max-w-sm mx-auto w-full">
+<header class="mb-10 text-center md:text-left">
+<h1 class="serif-text text-4xl font-normal text-on-surface mb-3 leading-tight">Welcome back.</h1>
+<p class="text-on-surface-variant font-body text-sm">Enter your details to continue your manuscript.</p>
+</header>
+<div class="space-y-4">
+<!-- Social Logins -->
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors border border-outline-variant/20 text-on-surface font-label text-sm">
+<img alt="Google" class="w-5 h-5" data-alt="Google colorful logo icon on a clean white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcd9K7PrKJ6afjjRqvrRfqeR3BdIz6e3Bi5lbtZQz_DeI7imZeqTu8kFu1p_ADe60KiYqA16Bza4kTV2LSE6XrQ-bBE989Nf8G4tSYOZ0W5d6HXSxqcXVvztvBaNWPTFVRnnGinkcaA2VQtDBvOmuuznw9ExNalTsiv5eBd7CraNA-9e5xKLRJGAz8ih6XV3C9WSDT5B_vwMEKrXiOL8HIX3uMKj_5Z7pGoi4ecnGNIfaZyF6411FQXEt1barzaTcs24HprWvVwMMK"/>
+<span>Google</span>
+</button>
+<button class="flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors border border-outline-variant/20 text-on-surface font-label text-sm">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+<span>GitHub</span>
+</button>
+</div>
+<div class="relative py-4">
+<div class="absolute inset-0 flex items-center">
+<span class="w-full border-t border-outline-variant/20"></span>
+</div>
+<div class="relative flex justify-center text-xs uppercase tracking-widest text-on-surface-variant bg-surface px-2">
+                            Or continue with
+                        </div>
+</div>
+<!-- Email Form -->
+<form class="space-y-4">
+<div class="space-y-1">
+<label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold" for="email">Email Address</label>
+<input class="w-full bg-surface-container-low border-none focus:ring-1 focus:ring-secondary/30 rounded-xl px-4 py-3 text-sm placeholder:text-on-surface-variant/40 transition-all" id="email" placeholder="author@scribesoul.com" type="email"/>
+</div>
+<button class="w-full bg-primary text-on-primary font-label text-sm font-semibold py-3.5 rounded-xl hover:opacity-90 transition-opacity active:scale-[0.98] transform" type="submit">
+                            Send Magic Link
+                        </button>
+</form>
+</div>
+<footer class="mt-10 text-center">
+<p class="text-xs text-on-surface-variant">
+                        New curator? <a class="text-secondary font-semibold hover:underline decoration-secondary/30 underline-offset-4" href="#">Create an account</a>
+</p>
+</footer>
+</div>
+<!-- Minimal Footer Info -->
+<div class="flex justify-between items-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/50 pt-8">
+<span>© 2024 ScribeSoul</span>
+<div class="flex gap-4">
+<a class="hover:text-on-surface transition-colors" href="#">Privacy</a>
+<a class="hover:text-on-surface transition-colors" href="#">Terms</a>
+</div>
+</div>
+</section>
+<!-- Right Section: Atmospheric Artwork -->
+<section class="hidden md:flex flex-1 relative bg-surface-container-highest overflow-hidden">
+<!-- Background Image with Overlay -->
+<div class="absolute inset-0 z-0">
+<img alt="Atmospheric Library" class="w-full h-full object-cover grayscale-[20%] sepia-[10%] opacity-90" data-alt="Moody dark library at night with soft lamp light hitting old leather bound books and a vintage writing desk with parchment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdpSIbDnYlfzSu-X8Xw_iXrs1RI4aOgPnYxW8zWWbO_us1sJdCY492wQLcvNxkyVt1-aYNsbPIZRAvewWEfcS00vYefdLFxxSMs2tuPrJBBeusYTB6mZqjMe3qPUR9B1iHs6qBEBLpHzEhe46SytqOclLAa5X66VJUVLmHMhMDJAdZGG0UAgH97PTkYd90lJV3Ph9ObVNZaJ95pwmI7OYOs7msZMEf6Zyd6lrTHiO-Ua2QdviRxLX6SX3ihoPzuG6pOjIbWE3mPRQF"/>
+<!-- Soft Tonal Overlay -->
+<div class="absolute inset-0 bg-gradient-to-tr from-surface-container-highest/90 via-surface-container-highest/40 to-transparent"></div>
+</div>
+<!-- Content on Image -->
+<div class="relative z-10 w-full h-full flex items-center justify-center p-16 lg:p-24">
+<div class="max-w-xl">
+<div class="w-12 h-1 bg-secondary mb-8"></div>
+<blockquote class="serif-text text-3xl lg:text-4xl xl:text-5xl font-light text-on-surface italic leading-relaxed mb-8">
+                        "Every secret of a writer's soul, every experience of his life, every quality of his mind, is written large in his works."
+                    </blockquote>
+<cite class="not-italic flex items-center gap-4">
+<span class="w-8 h-[1px] bg-outline-variant"></span>
+<span class="font-label text-sm uppercase tracking-widest text-on-surface font-semibold">Virginia Woolf</span>
+</cite>
+</div>
+</div>
+<!-- Subtle Texture Overlays -->
+<div class="absolute bottom-12 right-12 opacity-10 pointer-events-none">
+<svg fill="none" height="200" viewbox="0 0 200 200" width="200" xmlns="http://www.w3.org/2000/svg">
+<circle cx="100" cy="100" fill="url(#paint0_radial)" r="100"></circle>
+<defs>
+<radialgradient cx="0" cy="0" gradienttransform="translate(100 100) rotate(90) scale(100)" gradientunits="userSpaceOnUse" id="paint0_radial" r="1">
+<stop stop-color="#7C3AED"></stop>
+<stop offset="1" stop-color="#7C3AED" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+</svg>
+</div>
+</section>
+</main>
+</body></html>

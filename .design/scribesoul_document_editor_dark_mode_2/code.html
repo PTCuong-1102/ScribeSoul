@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Archivist | ScribeSoul</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed-variant": "#713700",
+            "secondary-fixed": "#d8e3fb",
+            "tertiary": "#ffb784",
+            "surface": "#0b1326",
+            "secondary-fixed-dim": "#bcc7de",
+            "secondary": "#bcc7de",
+            "on-background": "#dae2fd",
+            "on-primary-fixed-variant": "#5a00c6",
+            "error": "#ffb4ab",
+            "surface-container-lowest": "#060e20",
+            "on-secondary-fixed": "#111c2d",
+            "tertiary-fixed": "#ffdcc6",
+            "surface-bright": "#31394d",
+            "primary": "#d2bbff",
+            "on-surface-variant": "#ccc3d8",
+            "surface-variant": "#2d3449",
+            "on-tertiary-container": "#ffe0cd",
+            "inverse-surface": "#dae2fd",
+            "background": "#0b1326",
+            "on-secondary-fixed-variant": "#3c475a",
+            "on-primary-fixed": "#25005a",
+            "outline": "#958da1",
+            "on-tertiary-fixed": "#301400",
+            "primary-container": "#7c3aed",
+            "tertiary-container": "#a15100",
+            "outline-variant": "#4a4455",
+            "on-secondary-container": "#aeb9d0",
+            "surface-container": "#171f33",
+            "primary-fixed-dim": "#d2bbff",
+            "surface-tint": "#d2bbff",
+            "on-error-container": "#ffdad6",
+            "on-secondary": "#263143",
+            "inverse-on-surface": "#283044",
+            "tertiary-fixed-dim": "#ffb784",
+            "surface-container-high": "#222a3d",
+            "secondary-container": "#3e495d",
+            "inverse-primary": "#732ee4",
+            "error-container": "#93000a",
+            "surface-container-low": "#131b2e",
+            "on-error": "#690005",
+            "primary-fixed": "#eaddff",
+            "on-tertiary": "#4f2500",
+            "surface-container-highest": "#2d3449",
+            "surface-dim": "#0b1326",
+            "on-surface": "#dae2fd",
+            "on-primary-container": "#ede0ff",
+            "on-primary": "#3f008e"
+          },
+          "borderRadius": {
+            "DEFAULT": "1rem",
+            "lg": "2rem",
+            "xl": "3rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Newsreader"],
+            "body": ["Newsreader"],
+            "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #0b1326;
+      color: #dae2fd;
+      font-family: 'Newsreader', serif;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .archivist-scroll {
+      position: fixed;
+      right: 340px;
+      top: 100px;
+      bottom: 100px;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, #7c3aed, transparent);
+      opacity: 0.3;
+    }
+    .glass-panel {
+      backdrop-filter: blur(12px);
+      background-color: rgba(23, 31, 51, 0.7);
+    }
+  </style>
+</head>
+<body class="overflow-hidden">
+<!-- TopAppBar from JSON -->
+<header class="w-full top-0 z-50 fixed flex justify-between items-center px-12 py-6 bg-[#0b1326] bg-gradient-to-b from-[#171f33] to-transparent">
+<div class="text-2xl font-serif text-[#d2bbff] italic">The Archivist</div>
+<nav class="hidden md:flex items-center space-x-8 font-['Newsreader'] text-[#e2e8f0] tracking-tight">
+<a class="text-[#d2bbff] border-b-2 border-[#7c3aed] pb-1" href="#">Drafts</a>
+<a class="text-[#94a3b8] hover:text-[#d2bbff] transition-colors" href="#">Publish</a>
+<a class="text-[#94a3b8] hover:text-[#d2bbff] transition-colors" href="#">Analytics</a>
+</nav>
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+<input class="bg-surface-container-highest/50 border-none rounded-full py-2 pl-10 pr-4 text-sm font-label focus:ring-2 focus:ring-primary/30 w-64" placeholder="Search archives..." type="text"/>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:bg-[#171f33]/50 p-2 rounded-full transition-all duration-300">account_circle</span>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:bg-[#171f33]/50 p-2 rounded-full transition-all duration-300">settings</span>
+</div>
+</div>
+</header>
+<div class="flex h-screen pt-24 overflow-hidden">
+<!-- SideNavBar (Left Column) -->
+<aside class="h-screen w-72 left-0 top-0 fixed bg-[#0b1326] flex flex-col py-8 space-y-2 font-['Inter'] font-medium text-sm tracking-wide">
+<div class="px-6 mb-8 pt-16">
+<div class="text-primary font-headline text-xl italic mb-1">Project Alpha</div>
+<div class="text-outline text-xs uppercase tracking-widest">6,400 words</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-[#d2bbff] font-bold border-r-2 border-[#7c3aed] bg-[#171f33] px-6 py-3 flex items-center gap-4 transition-all translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+          Chapters
+        </a>
+<a class="text-[#94a3b8] hover:bg-[#171f33] hover:text-[#e2e8f0] px-6 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+          Characters
+        </a>
+<a class="text-[#94a3b8] hover:bg-[#171f33] hover:text-[#e2e8f0] px-6 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+          Locations
+        </a>
+<a class="text-[#94a3b8] hover:bg-[#171f33] hover:text-[#e2e8f0] px-6 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+          Research
+        </a>
+</nav>
+<div class="px-6 py-4">
+<button class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-label text-sm font-semibold shadow-lg hover:opacity-90 transition-opacity">
+          New Chapter
+        </button>
+</div>
+<div class="mt-auto pb-8 border-t border-outline-variant/10 pt-4">
+<a class="text-[#94a3b8] hover:bg-[#171f33] hover:text-[#e2e8f0] px-6 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+          Archive
+        </a>
+<a class="text-[#94a3b8] hover:bg-[#171f33] hover:text-[#e2e8f0] px-6 py-3 flex items-center gap-4 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+          Settings
+        </a>
+</div>
+</aside>
+<!-- Main Content Area (Middle Column) -->
+<main class="flex-1 ml-72 mr-80 overflow-y-auto scrollbar-hide px-24 py-12 relative">
+<div class="max-w-3xl mx-auto">
+<!-- Document Meta -->
+<div class="mb-16 flex items-center gap-4 text-outline text-sm font-label">
+<span>Draft #4</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>Last edited 2h ago</span>
+</div>
+<!-- The Silent Manuscript -->
+<article class="space-y-12">
+<header>
+<h1 class="text-6xl font-headline font-extralight italic text-on-surface mb-4 leading-tight">The Silent Manuscript</h1>
+<div class="w-24 h-0.5 bg-primary/30"></div>
+</header>
+<section class="space-y-8 text-xl leading-relaxed text-on-surface/90 font-body">
+<p class="first-letter:text-5xl first-letter:font-serif first-letter:mr-3 first-letter:float-left first-letter:text-primary">
+              The ink had a peculiar way of breathing under the dim candlelight of the Archivist’s study. It wasn't merely the flicker of the wick; the letters themselves seemed to pulsate, shifting ever so slightly when his gaze wandered. Elara had warned him that the archives were not passive storage, but a living, breathing conscience of a city that had long forgotten how to speak its own name.
+            </p>
+<p>
+              He touched the edge of the vellum. It was cold—unnaturally so—like the surface of a frozen pond in the heart of winter. This was the fourth chapter of the forbidden chronology, the one they said had been scrubbed from existence by the Council of Tides. Yet here it was, resting beneath his calloused fingers, its secrets ready to spill like wine from a broken chalice.
+            </p>
+<!-- Block-based UI Highlight -->
+<div class="group relative py-6 px-8 bg-surface-container-low rounded-lg border-l-4 border-primary/20 transition-all hover:border-primary/50">
+<span class="absolute -left-12 top-8 opacity-0 group-hover:opacity-100 transition-opacity text-outline-variant cursor-pointer">
+<span class="material-symbols-outlined">drag_indicator</span>
+</span>
+<p class="italic text-secondary">
+                "Memory is the only ghost that truly haunts these halls," she had whispered before the shadow took her. Now, standing alone in the silence, he finally understood what she meant.
+              </p>
+</div>
+<p>
+              Outside, the indigo night pressed against the stained glass windows. The stars were hidden behind a veil of thick, maritime fog, leaving the Archivist in his own private universe. He picked up the quill, the feather light as a promise, and prepared to write the words that would either save the city or burn it to the ground.
+            </p>
+<p>
+              The silence was absolute, save for the rhythmic scratching of his thoughts against the paper. It was a sound he had grown to love—a small, defiant noise against the encroaching void of history.
+            </p>
+</section>
+</article>
+</div>
+<!-- Progress Indicator -->
+<div class="archivist-scroll"></div>
+</main>
+<!-- NavigationDrawer / AI Assistant (Right Column) -->
+<aside class="h-screen w-80 right-0 top-0 fixed bg-[#0b1326] bg-[#131b2e] backdrop-blur-xl shadow-[-32px_0_32px_0_rgba(6,14,32,0.08)] flex flex-col p-6 h-full border-l border-[#4a4455]/15 font-['Inter'] text-sm">
+<div class="pt-16 mb-8">
+<div class="flex items-center justify-between mb-2">
+<h2 class="text-[#d2bbff] font-headline text-lg italic">Soul Assistant</h2>
+<span class="material-symbols-outlined text-primary/50 text-xl" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<p class="text-outline text-xs">Deep Space Context Analysis</p>
+</div>
+<div class="space-y-6 flex-1 overflow-y-auto scrollbar-hide">
+<!-- Tabs -->
+<div class="flex gap-2 p-1 bg-surface-container-lowest rounded-xl">
+<button class="flex-1 py-2 bg-[#7c3aed]/20 text-[#d2bbff] rounded-lg text-xs font-semibold">Analysis</button>
+<button class="flex-1 py-2 text-outline hover:text-on-surface transition-colors text-xs">Plot</button>
+<button class="flex-1 py-2 text-outline hover:text-on-surface transition-colors text-xs">Style</button>
+</div>
+<!-- AI Insights Cards -->
+<div class="space-y-4">
+<div class="p-5 bg-surface-container rounded-2xl border border-outline-variant/10 hover:border-primary/20 transition-all">
+<div class="flex items-center gap-2 mb-3 text-primary">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+<span class="font-semibold text-xs tracking-wide uppercase">Motive Insight</span>
+</div>
+<p class="text-on-surface/80 leading-relaxed text-sm italic font-body">
+              "The Archivist's hesitation at the frozen vellum suggests a growing fear of the knowledge he seeks. Consider emphasizing his sensory detachment to heighten the tension."
+            </p>
+</div>
+<div class="p-5 bg-surface-container rounded-2xl border border-outline-variant/10 hover:border-primary/20 transition-all">
+<div class="flex items-center gap-2 mb-3 text-tertiary">
+<span class="material-symbols-outlined text-sm">timeline</span>
+<span class="font-semibold text-xs tracking-wide uppercase">Plot Point</span>
+</div>
+<p class="text-on-surface/80 leading-relaxed text-sm font-body">
+              The Council of Tides may have left a 'trap' within the text. Does the shifting ink respond to his heartbeat?
+            </p>
+</div>
+<!-- Character Snapshot -->
+<div class="mt-8">
+<h3 class="text-outline text-[10px] uppercase tracking-widest mb-4">Character Focal Points</h3>
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-primary-container/20 border border-primary/20">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" data-alt="Portrait of a mysterious woman in dark historical attire with intense eyes and cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCz5Eu6GAXKh4zhhtNnpQaBg5DFOOzmqpCW00YW011Ou6fGHZ3Tdj_gGS0oPjKATB3YC69ZOGL04LgiqAiFNs0nBOvhjUB8UDmwYCGgIrp12o3zUPZkzSxWvUNkLEZQJqTaXXOUiydOiA-I71rqL7T7N6rsviafWEuY1AjWTyRnuFcQTbVS1VJITL_myJdF5igs9QlZ5gGsxMtSaKIMOTivIuQD0i5KFRpJVCfS0LRLjC9fBkTR6UCMBZ84JI066tqmquVSpr3OSDbg"/>
+</div>
+<span class="text-on-surface font-body italic">Elara Vane</span>
+</div>
+<span class="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">Missing</span>
+</div>
+<div class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-primary-container/20 border border-primary/20">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" data-alt="Close up of a weathered man's face, scholar aesthetic, soft candle lighting, cinematic depth" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaQM-GbKtGUSuRVdArzO3sHgI9BHKVIrG_-LE3zaD1UpGJ9aX3KPN4DE7NtBXnGNJRQy9znOpWZUYvJpRu33JJKBKFq_B4SMOPjZUBiQXpvwLflkfn6ayoRYzVyZqldzt6FEVvc6JkX8sVlVBXFtXO8xuAaKNEZeBn-_aMFhlvcUut2Q9w1f2TpfFBGqGM_uFGf_2BiUMbXYJOwRf1cnROp8vcC4U1tLrdXKqPIoJg5GOwSaDDim6qLHUItNC9wndn1QxBzwgk5qk7"/>
+</div>
+<span class="text-on-surface font-body italic">The Archivist</span>
+</div>
+<span class="text-[10px] text-tertiary bg-tertiary/10 px-2 py-0.5 rounded-full">Active</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer CTA -->
+<div class="mt-auto pt-6 border-t border-outline-variant/10">
+<div class="bg-surface-container-highest/40 p-4 rounded-xl">
+<p class="text-xs text-outline mb-3">Ask the Soul Assistant anything...</p>
+<div class="flex gap-2">
+<input class="flex-1 bg-surface-container-lowest border-none rounded-lg text-xs py-2 px-3 focus:ring-1 focus:ring-primary/50 font-label" placeholder="Analyze recent changes..." type="text"/>
+<button class="bg-primary text-on-primary p-2 rounded-lg hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Floating Action Button (Contextual) -->
+<button class="fixed bottom-8 right-96 z-50 bg-primary-container text-on-primary-container h-14 w-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+</button>
+</body></html>
