@@ -4,6 +4,6 @@ import * as schema from './schema';
 
 neonConfig.fetchConnectionCache = true;
 
-const databaseUrl = process.env.DATABASE_URL || "";
+const databaseUrl = process.env.DATABASE_URL || "postgresql://db_user:db_pass@ep-placeholder-1234.us-east-1.aws.neon.tech/neondb?sslmode=require";
 const sql = neon(databaseUrl);
 export const db = drizzle(sql, { schema });
