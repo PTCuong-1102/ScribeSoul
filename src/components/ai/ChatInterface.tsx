@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from "react"
 import { useChat } from "@ai-sdk/react"
 import { UIMessage, DefaultChatTransport } from "ai"

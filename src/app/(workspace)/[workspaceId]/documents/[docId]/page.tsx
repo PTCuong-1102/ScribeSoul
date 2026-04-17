@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from 'react'
 import BlockEditor from '@/components/editor/BlockEditor'
 import { ChatInterface } from '@/components/ai/ChatInterface'

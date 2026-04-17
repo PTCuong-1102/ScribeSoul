@@ -4,5 +4,5 @@ import * as schema from './schema';
 
 neonConfig.fetchConnectionCache = true;
 
-const sql = neon(process.env.DATABASE_URL!);
+const sql = neon(process.env.DATABASE_URL || "postgres://localhost/placeholder");
 export const db = drizzle(sql, { schema });

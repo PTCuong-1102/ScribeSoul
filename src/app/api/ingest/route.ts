@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { documentChunks, chunkEmbeddings } from "@/lib/db/schema/ai"
