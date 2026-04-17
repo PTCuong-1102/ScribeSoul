@@ -2,10 +2,14 @@ import React from 'react'
 import { Plus, Clock, FileText, Search } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { KnowledgeWeb } from '@/components/dashboard/KnowledgeWeb'
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
+import { ProductivityPulse } from '@/components/dashboard/ProductivityPulse'
 
-export default function DashboardPage() {
+export default function DashboardPage({ params }: { params: { workspaceId: string } }) {
   return (
     <div className="max-w-6xl mx-auto p-12 space-y-16">
+      <OnboardingWizard />
       {/* Header section */}
       <section className="space-y-4">
         <h1 className="text-5xl font-serif text-on-surface tracking-tight">Thư viện của bạn</h1>
@@ -32,19 +36,7 @@ export default function DashboardPage() {
             </div>
           </Button>
         </div>
-
-        <div className="bg-surface-container-low dark:bg-surface-container rounded-3xl p-8 space-y-6 flex flex-col justify-center border border-border/5">
-          <div className="space-y-1">
-            <span className="text-4xl font-serif text-primary">48.2k</span>
-            <span className="block font-sans text-xs uppercase tracking-[0.2em] text-on-surface-variant font-bold">Tổng số từ viết</span>
-          </div>
-          <div className="h-1 bg-border/10 rounded-full overflow-hidden">
-            <div className="h-full bg-secondary w-3/4 shadow-[0_0_10px_var(--ai-glow)]" />
-          </div>
-          <p className="font-sans text-xs text-on-surface-variant italic leading-relaxed">
-            "Bạn đang ở giữa cao trào của Chương 3. Trợ lý AI đã tìm thấy 3 mâu thuẫn cần giải quyết."
-          </p>
-        </div>
+        <ProductivityPulse />
       </div>
 
       {/* Recent Drafts */}
@@ -84,26 +76,15 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Knowledge Web Placeholder */}
+      {/* Knowledge Web */}
       <section className="pt-8 space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Plus className="w-5 h-5 text-on-surface-variant rotate-45" />
             <h2 className="text-2xl font-serif text-on-surface">Mạng lưới kiến thức</h2>
           </div>
         </div>
         
-        <div className="h-80 w-full rounded-[2.5rem] bg-surface-container-low dark:bg-surface-container-lowest/50 relative overflow-hidden flex items-center justify-center border border-border/5">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--ai-glow)_0%,transparent_70%)] opacity-50" />
-          <div className="relative text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto violet-glow animate-pulse">
-              <Sparkles className="w-8 h-8 text-secondary" />
-            </div>
-            <p className="font-sans text-sm text-on-surface-variant italic">
-              AI đang phân tích các mối liên kết giữa các nhân vật và bối cảnh...
-            </p>
-          </div>
-        </div>
+        <KnowledgeWeb workspaceId={params.workspaceId} />
       </section>
     </div>
   )

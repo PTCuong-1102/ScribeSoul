@@ -3,8 +3,11 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { Search, FileText, Sparkles, Command, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { semanticSearch } from "@/server/actions/search"
+import { useRouter } from "next/navigation"
 
 export function CommandSearch({ workspaceId }: { workspaceId: string }) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<any[]>([])
@@ -22,34 +25,35 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
-  const handleSearch = useCallback(async (val: string) => {
+  // Use a ref for the timeout to handle debouncing
+  const searchTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+  const handleSearch = useCallback((val: string) => {
     setQuery(val)
     if (val.length < 2) {
       setResults([])
       return
     }
 
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+
     setLoading(true)
-    try {
-      const resp = await fetch(`/api/chat`, {
-        method: "POST",
-        body: JSON.stringify({ 
-          messages: [{ role: "user", content: `Tìm kiếm thông tin về: ${val}` }],
-          workspaceId 
-        })
-      })
-      // Note: This is a placeholder for semantic search integration
-      // Ideally we call a dedicated search API
-      setResults([
-        { id: "1", title: "Chương 1: Bình minh", excerpt: "Mặt trời mọc sau rặng núi..." },
-        { id: "2", title: "Nhân vật: Elias", excerpt: "Một chàng trai trẻ với đôi mắt bạc..." },
-      ])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        const searchResults = await semanticSearch(workspaceId, val)
+        setResults(searchResults)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
+    }, 400) // 400ms debounce
   }, [workspaceId])
+
+  const handleSelect = (docId: string) => {
+    setOpen(false)
+    router.push(`/${workspaceId}/documents/${docId}`)
+  }
 
   if (!open) return null
 
@@ -88,6 +92,7 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
               {results.map((r) => (
                 <button 
                   key={r.id}
+                  onClick={() => handleSelect(r.docId)}
                   className="w-full text-left p-4 rounded-xl hover:bg-surface-container-high transition-all group flex items-start space-x-4 border border-transparent hover:border-border/5"
                 >
                   <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
