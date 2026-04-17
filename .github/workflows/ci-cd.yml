@@ -84,9 +84,17 @@ jobs:
           node-version: "20"
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
+      - name: Check DATABASE_URL Availability
+        id: db_url
+        run: |
+          if [ -n "$DATABASE_URL" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Push DB Schema
-        if: ${{ env.DATABASE_URL != '' }}
+        if: ${{ steps.db_url.outputs.available == 'true' }}
         run: npx drizzle-kit push
       - name: Skip DB Schema Push (missing DATABASE_URL)
-        if: ${{ env.DATABASE_URL == '' }}
+        if: ${{ steps.db_url.outputs.available == 'false' }}
         run: echo "Skipping DB schema push because DATABASE_URL secret is not configured."
