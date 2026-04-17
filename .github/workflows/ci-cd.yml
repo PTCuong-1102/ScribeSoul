@@ -71,7 +71,7 @@ jobs:
   migrate:
     name: Database Migration
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && secrets.DATABASE_URL != ''
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
