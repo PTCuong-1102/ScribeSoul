@@ -71,7 +71,7 @@ jobs:
   migrate:
     name: Database Migration
     needs: build
-    if: github.ref == 'refs/heads/main' && secrets.DATABASE_URL != ''
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -85,4 +85,8 @@ jobs:
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
       - name: Push DB Schema
+        if: env.DATABASE_URL != ''
         run: npx drizzle-kit push
+      - name: Skip DB Schema Push (missing DATABASE_URL)
+        if: env.DATABASE_URL == ''
+        run: echo "Skipping DB schema push because DATABASE_URL secret is not configured."
