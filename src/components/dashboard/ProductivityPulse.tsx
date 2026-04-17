@@ -50,7 +50,7 @@ export function ProductivityPulse() {
       </div>
 
       <p className="font-sans text-xs text-on-surface-variant italic leading-relaxed pt-2 opacity-60 group-hover:opacity-100 transition-opacity">
-        "Năng suất của bạn đang ở mức cao nhất vào khung giờ 14h-16h. Soul Assistant đang chuẩn bị bối cảnh cho chương tiếp theo."
+        &quot;Năng suất của bạn đang ở mức cao nhất vào khung giờ 14h-16h. Soul Assistant đang chuẩn bị bối cảnh cho chương tiếp theo.&quot;
       </p>
     </div>
   )

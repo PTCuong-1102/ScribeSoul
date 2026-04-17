@@ -2,8 +2,6 @@
 
 import { db } from "@/lib/db"
 import { blocks } from "@/lib/db/schema/blocks"
-import { documents } from "@/lib/db/schema/documents"
-import { eq } from "drizzle-orm"
 import { createDocument } from "./documents"
 
 /**
@@ -12,7 +10,7 @@ import { createDocument } from "./documents"
  */
 function markdownToBlocks(markdown: string) {
   const lines = markdown.split('\n');
-  const blocks: any[] = [];
+  const blocks: Record<string, unknown>[] = [];
   
   lines.forEach((line, index) => {
     if (!line.trim()) return;
@@ -50,7 +48,9 @@ export async function importMarkdown(workspaceId: string, title: string, markdow
   if (importedBlocks.length > 0) {
     await db.insert(blocks).values(
       importedBlocks.map(b => ({
-        ...b,
+        type: b.type as string,
+        content: b.content,
+        sortOrder: b.sortOrder as number,
         documentId: newDoc.id
       }))
     );

@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     if (currentBlocks.length === 0) return NextResponse.json({ success: true, message: "No content to ingest" })
 
     // 1. Chunking
-    const chunks = chunkBlocks(documentId, currentBlocks)
+    const chunks = chunkBlocks(documentId, currentBlocks as any)
 
     // 2. Generate Embeddings
     const embeddingResults = await generateEmbeddings(chunks.map(c => c.content))

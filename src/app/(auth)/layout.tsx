@@ -19,7 +19,7 @@ export default function AuthLayout({
         
         <div className="relative z-10 max-w-lg text-center space-y-6">
           <blockquote className="text-4xl font-serif italic text-on-surface leading-tight">
-            "Viết không phải là mô tả, mà là khám phá vẻ đẹp của sự im lặng giữa những câu chữ."
+            &quot;Viết không phải là mô tả, mà là khám phá vẻ đẹp của sự im lặng giữa những câu chữ.&quot;
           </blockquote>
           <p className="font-sans text-on-surface-variant uppercase tracking-widest text-sm">
             — The Silent Manuscript —

@@ -1,8 +1,7 @@
 import React, { useState } from "react"
 import { useChat } from "@ai-sdk/react"
 import { UIMessage, DefaultChatTransport } from "ai"
-import { Sparkles, Send, User, ChevronRight, BookOpen } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Sparkles, Send, BookOpen } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
@@ -49,7 +48,7 @@ export function ChatInterface({ workspaceId, conversationId }: { workspaceId: st
             <div className="flex flex-col items-center justify-center h-full pt-20 text-center space-y-4">
               <BookOpen className="w-12 h-12 text-on-surface-variant/10" />
               <p className="font-serif italic text-on-surface-variant text-sm max-w-[200px]">
-                "Hãy hỏi tôi về bất cứ điều gì trong thế giới bạn đang viết."
+                &quot;Hãy hỏi tôi về bất cứ điều gì trong thế giới bạn đang viết.&quot;
               </p>
             </div>
           )}
@@ -105,7 +104,7 @@ export function ChatInterface({ workspaceId, conversationId }: { workspaceId: st
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit(e as any);
+                handleSubmit(e as unknown as React.FormEvent);
               }
             }}
           />

@@ -30,7 +30,7 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
       try {
         const data = await getKnowledgeGraph(workspaceId)
         // Initialize random positions
-        const initialNodes = data.nodes.map((n: any) => ({
+        const initialNodes = data.nodes.map((n: { id: string; label: string; type: string }) => ({
           ...n,
           x: Math.random() * 400 + 50,
           y: Math.random() * 300 + 50,
@@ -94,7 +94,7 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
 
     animationFrameId = requestAnimationFrame(update)
     return () => cancelAnimationFrame(animationFrameId)
-  }, [loading])
+  }, [loading, nodes.length])
 
   if (loading) return (
     <div className="w-full h-[400px] flex items-center justify-center bg-surface-container-lowest/30 rounded-3xl border border-border/5">
@@ -157,6 +157,6 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
   )
 }
 
-function cn(...classes: any[]) {
+function cn(...classes: (string | boolean | undefined | null)[]) {
   return classes.filter(Boolean).join(" ")
 }

@@ -33,7 +33,7 @@ export async function updateProfile(data: { name?: string, image?: string }) {
   return { success: true }
 }
 
-export async function updateAIPreferences(preferences: any) {
+export async function updateAIPreferences(preferences: Record<string, unknown>) {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
 

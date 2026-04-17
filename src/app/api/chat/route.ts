@@ -1,11 +1,9 @@
 import { openai } from "@ai-sdk/openai";
-import { streamText, tool } from "ai";
+import { streamText } from "ai";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { aiConversations, aiMessages } from "@/lib/db/schema/ai";
+import { aiMessages } from "@/lib/db/schema/ai";
 import { retrieveContext } from "@/lib/ai/retriever";
-import { z } from "zod";
-import { eq } from "drizzle-orm";
 
 export const maxDuration = 30;
 
@@ -14,7 +12,7 @@ export async function POST(req: Request) {
     const session = await auth();
     if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
 
-    const { messages, workspaceId, conversationId, contextScope } = await req.json();
+    const { messages, workspaceId, conversationId } = await req.json();
     const lastMessage = messages[messages.length - 1].content;
 
     // 1. Retrieve Context (RAG)

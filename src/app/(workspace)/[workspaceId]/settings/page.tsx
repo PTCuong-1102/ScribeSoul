@@ -10,7 +10,7 @@ import { getUserSettings, updateProfile } from "@/server/actions/settings"
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   
@@ -19,8 +19,10 @@ export default function SettingsPage() {
   useEffect(() => {
     async function load() {
       const data = await getUserSettings()
-      setUser(data)
-      setName(data?.name || "")
+      if (data) {
+        setUser(data as unknown as Record<string, unknown>)
+        setName(data.name || "")
+      }
       setLoading(false)
     }
     load()
@@ -90,7 +92,7 @@ export default function SettingsPage() {
               <div className="space-y-2 opacity-60">
                 <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Email (Liên kết)</label>
                 <Input 
-                  value={user?.email || ""} 
+                  value={(user?.email as string) || ""} 
                   disabled
                   className="bg-surface-container-low border-border/10 rounded-xl font-serif text-lg py-6"
                 />
@@ -158,6 +160,6 @@ export default function SettingsPage() {
   )
 }
 
-function cn(...classes: any[]) {
+function cn(...classes: (string | boolean | undefined | null)[]) {
   return classes.filter(Boolean).join(" ")
 }

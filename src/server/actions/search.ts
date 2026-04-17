@@ -3,7 +3,7 @@
 import { retrieveContext } from "@/lib/ai/retriever"
 import { db } from "@/lib/db"
 import { documents } from "@/lib/db/schema/documents"
-import { eq, and, sql } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { auth } from "@/auth"
 
 export async function semanticSearch(workspaceId: string, query: string) {

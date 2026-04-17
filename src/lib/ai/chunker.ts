@@ -11,7 +11,19 @@ export interface Chunk {
   };
 }
 
-export function chunkBlocks(docId: string, blocks: any[], maxTokens = 600, overlap = 100): Chunk[] {
+interface BlockFragment {
+  text?: string;
+  [key: string]: unknown;
+}
+
+interface BasicBlock {
+  id: string;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  content: any;
+  [key: string]: unknown;
+}
+
+export function chunkBlocks(docId: string, blocks: BasicBlock[], maxTokens = 600, overlap = 100): Chunk[] {
   const chunks: Chunk[] = [];
   let currentChunkText = "";
   let currentBlockIds: string[] = [];
@@ -22,11 +34,9 @@ export function chunkBlocks(docId: string, blocks: any[], maxTokens = 600, overl
 
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    const blockText = JSON.stringify(block.content); // Or extract plain text
-    
     // Simplification: just use plain text if possible
     const plainText = Array.isArray(block.content) 
-      ? block.content.map((c: any) => c.text).join(' ')
+      ? block.content.map((c) => c.text || "").join(' ')
       : typeof block.content === 'string' ? block.content : "";
 
     if (currentChunkText.length + plainText.length > getCharLimit()) {

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react"
 import { Search, FileText, Sparkles, Command, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { semanticSearch } from "@/server/actions/search"
 import { useRouter } from "next/navigation"
 
@@ -10,7 +9,13 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const [results, setResults] = useState<any[]>([])
+  interface SearchResult {
+    id: string;
+    docId: string;
+    title: string;
+    excerpt: string;
+  }
+  const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
 
   // Toggle Command Palette

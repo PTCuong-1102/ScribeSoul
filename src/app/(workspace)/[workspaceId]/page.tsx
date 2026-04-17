@@ -64,7 +64,7 @@ export default function DashboardPage({ params }: { params: { workspaceId: strin
               </div>
               <h3 className="text-xl font-serif text-on-surface mb-3 group-hover:text-primary transition-colors">{draft.title}</h3>
               <p className="font-serif italic text-on-surface-variant text-sm leading-relaxed line-clamp-2">
-                "{draft.excerpt}"
+                &quot;{draft.excerpt}&quot;
               </p>
               <div className="mt-8 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-primary">
@@ -87,23 +87,5 @@ export default function DashboardPage({ params }: { params: { workspaceId: strin
         <KnowledgeWeb workspaceId={params.workspaceId} />
       </section>
     </div>
-  )
-}
-
-function Sparkles({ className }: { className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" height="24" viewBox="0 0 24 24" 
-      fill="none" stroke="currentColor" strokeWidth="2" 
-      strokeLinecap="round" strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-      <path d="M5 3v4"/>
-      <path d="M19 17v4"/>
-      <path d="M3 5h4"/>
-      <path d="M17 19h4"/>
-    </svg>
   )
 }

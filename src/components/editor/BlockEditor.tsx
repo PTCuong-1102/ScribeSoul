@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from 'react'
+import React from 'react'
 import { BlockNoteEditor, PartialBlock } from "@blocknote/core"
 import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems, DefaultReactSuggestionItem } from "@blocknote/react"
 import { BlockNoteView } from "@blocknote/mantine"
@@ -61,7 +61,7 @@ export default function BlockEditor({ initialContent, onChange }: BlockEditorPro
   const soulWrite = async (editor: BlockNoteEditor) => {
     const currentBlock = editor.getTextCursorPosition().block;
     const prevBlocks = editor.document.slice(0, editor.document.indexOf(currentBlock) + 1);
-    const context = prevBlocks.map(b => (b as any).content?.[0]?.text || "").join("\n");
+    const context = prevBlocks.map(b => (b.content as any)?.[0]?.text || "").join("\n");
     
     // Insert a temporary "AI is writing..." block or similar
     const loadingBlock: PartialBlock = {
@@ -75,7 +75,7 @@ export default function BlockEditor({ initialContent, onChange }: BlockEditorPro
       const response = await fetch("/api/ai/autocomplete", {
         method: "POST",
         body: JSON.stringify({ 
-          prompt: (currentBlock as any).content?.[0]?.text || "",
+          prompt: (currentBlock.content as any)?.[0]?.text || "",
           context 
         }),
       });
@@ -123,7 +123,7 @@ export default function BlockEditor({ initialContent, onChange }: BlockEditorPro
           getItems={async (query) =>
             filterSuggestionItems(slashMenuItems, query)
           }
-          onItemClick={(item) => (item as any).onItemClick()}
+          onItemClick={(item: DefaultReactSuggestionItem) => item.onItemClick()}
         />
       </BlockNoteView>
       <style jsx global>{`

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { documentChunks, chunkEmbeddings } from "@/lib/db/schema/ai";
 import { documents } from "@/lib/db/schema/documents";
-import { sql, eq, and, inArray } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { generateEmbedding } from "./embedder";
 
 export interface RetrievalResult {
@@ -44,10 +44,10 @@ export async function retrieveContext(
     LIMIT ${limit}
   `);
 
-  return results.rows.map((r: any) => ({
-    content: r.content,
-    docTitle: r.doc_title,
-    docId: r.doc_id,
-    score: r.similarity
+  return results.rows.map((r: Record<string, unknown>) => ({
+    content: r.content as string,
+    docTitle: r.doc_title as string,
+    docId: r.doc_id as string,
+    score: r.similarity as number
   }));
 }
