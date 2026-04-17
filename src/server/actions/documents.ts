@@ -54,7 +54,7 @@ export async function getDocument(id: string) {
     where: eq(documents.id, id),
     with: {
       blocks: {
-        orderBy: [asc(db.schema.blocks.sortOrder)],
+        orderBy: (blk, { asc }) => [asc(blk.sortOrder)],
       },
     },
   })

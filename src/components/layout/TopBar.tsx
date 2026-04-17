@@ -49,7 +49,7 @@ export function TopBar() {
         </Button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger>
             <Button variant="ghost" size="icon" className="rounded-full bg-surface-container-low dark:bg-surface-container border border-border/5">
               <User className="w-4 h-4 text-on-surface" />
             </Button>

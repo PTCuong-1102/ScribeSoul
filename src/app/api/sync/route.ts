@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[SYNC_ERROR]", error)
-    if (error instanceof z.ZodError) return NextResponse.json(error.errors, { status: 400 })
+    if (error instanceof z.ZodError) return NextResponse.json(error.issues, { status: 400 })
     return new NextResponse("Internal Error", { status: 500 })
   }
 }

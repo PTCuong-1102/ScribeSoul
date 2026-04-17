@@ -1,59 +1,63 @@
 import { relations } from "drizzle-orm"
-import * as users from "./users"
-import * as workspaces from "./workspaces"
-import * as documents from "./documents"
-import * as blocks from "./blocks"
-import * as links from "./links"
-import * as ai from "./ai"
+import * as usersSchema from "./users"
+import * as workspacesSchema from "./workspaces"
+import * as documentsSchema from "./documents"
+import * as blocksSchema from "./blocks"
+import * as aiSchema from "./ai"
 
-export { users, workspaces, documents, blocks, links, ai }
+export * from "./users"
+export * from "./workspaces"
+export * from "./documents"
+export * from "./blocks"
+export * from "./links"
+export * from "./ai"
 
 // Relations
-export const userRelations = relations(users.users, ({ many }) => ({
-  workspaces: many(workspaces.workspaces),
-  conversations: many(ai.aiConversations),
+export const userRelations = relations(usersSchema.users, ({ many }) => ({
+  workspaces: many(workspacesSchema.workspaces),
+  conversations: many(aiSchema.aiConversations),
 }))
 
-export const workspaceRelations = relations(workspaces.workspaces, ({ one, many }) => ({
-  owner: one(users.users, {
-    fields: [workspaces.workspaces.ownerId],
-    references: [users.users.id],
+export const workspaceRelations = relations(workspacesSchema.workspaces, ({ one, many }) => ({
+  owner: one(usersSchema.users, {
+    fields: [workspacesSchema.workspaces.ownerId],
+    references: [usersSchema.users.id],
   }),
-  documents: many(documents.documents),
+  documents: many(documentsSchema.documents),
 }))
 
-export const documentRelations = relations(documents.documents, ({ one, many }) => ({
-  workspace: one(workspaces.workspaces, {
-    fields: [documents.documents.workspaceId],
-    references: [workspaces.workspaces.id],
+export const documentRelations = relations(documentsSchema.documents, ({ one, many }) => ({
+  workspace: one(workspacesSchema.workspaces, {
+    fields: [documentsSchema.documents.workspaceId],
+    references: [workspacesSchema.workspaces.id],
   }),
-  parent: one(documents.documents, {
-    fields: [documents.documents.parentId],
-    references: [documents.documents.id],
+  parent: one(documentsSchema.documents, {
+    fields: [documentsSchema.documents.parentId],
+    references: [documentsSchema.documents.id],
     relationName: "document_tree",
   }),
-  children: many(documents.documents, { relationName: "document_tree" }),
-  blocks: many(blocks.blocks),
+  children: many(documentsSchema.documents, { relationName: "document_tree" }),
+  blocks: many(blocksSchema.blocks),
 }))
 
-export const blockRelations = relations(blocks.blocks, ({ one }) => ({
-  document: one(documents.documents, {
-    fields: [blocks.blocks.documentId],
-    references: [documents.documents.id],
+export const blockRelations = relations(blocksSchema.blocks, ({ one }) => ({
+  document: one(documentsSchema.documents, {
+    fields: [blocksSchema.blocks.documentId],
+    references: [documentsSchema.documents.id],
   }),
 }))
 
-export const conversationRelations = relations(ai.aiConversations, ({ one, many }) => ({
-  user: one(users.users, {
-    fields: [ai.aiConversations.userId],
-    references: [users.users.id],
+export const conversationRelations = relations(aiSchema.aiConversations, ({ one, many }) => ({
+  user: one(usersSchema.users, {
+    fields: [aiSchema.aiConversations.userId],
+    references: [usersSchema.users.id],
   }),
-  messages: many(ai.aiMessages),
+  messages: many(aiSchema.aiMessages),
 }))
 
-export const messageRelations = relations(ai.aiMessages, ({ one }) => ({
-  conversation: one(ai.aiConversations, {
-    fields: [ai.aiMessages.conversationId],
-    references: [ai.aiConversations.id],
+export const messageRelations = relations(aiSchema.aiMessages, ({ one }) => ({
+  conversation: one(aiSchema.aiConversations, {
+    fields: [aiSchema.aiMessages.conversationId],
+    references: [aiSchema.aiConversations.id],
   }),
 }))
