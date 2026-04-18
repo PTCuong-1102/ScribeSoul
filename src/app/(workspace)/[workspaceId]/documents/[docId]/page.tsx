@@ -16,9 +16,9 @@ export default async function DocumentPage({ params }: { params: { workspaceId: 
   const initialContent = doc.blocks.length > 0 
     ? doc.blocks.map((b) => ({
         id: b.id,
-        type: b.type as any,
-        content: b.content as any,
-      })) as PartialBlock[]
+        type: b.type,
+        content: b.content,
+      } as unknown as PartialBlock))
     : undefined
 
   return (
