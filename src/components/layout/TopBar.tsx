@@ -2,14 +2,16 @@
 
 import React from 'react'
 import { useTheme } from 'next-themes'
-import { Sun, Moon, Bell, User } from 'lucide-react'
+import { Sun, Moon, Bell, User, LogOut } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { signOut } from "@/server/actions/auth"
 
 export function TopBar() {
   const { theme, setTheme } = useTheme()
@@ -58,7 +60,12 @@ export function TopBar() {
             <DropdownMenuItem className="cursor-pointer font-sans h-10 rounded-lg">
               Hồ sơ cá nhân
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer font-sans h-10 rounded-lg">
+            <DropdownMenuSeparator className="bg-border/10" />
+            <DropdownMenuItem
+              className="cursor-pointer font-sans h-10 rounded-lg text-destructive focus:text-destructive flex items-center gap-2"
+              onClick={() => signOut()}
+            >
+              <LogOut className="w-4 h-4" />
               Đăng xuất
             </DropdownMenuItem>
           </DropdownMenuContent>

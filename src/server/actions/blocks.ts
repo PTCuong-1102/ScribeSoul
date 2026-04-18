@@ -4,10 +4,10 @@ import { db } from "@/lib/db"
 import { blocks } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
 import { eq, asc } from "drizzle-orm"
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth/server"
 
 async function validateDocumentAccess(documentId: string) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Chưa đăng nhập")
 
   const doc = await db.query.documents.findFirst({

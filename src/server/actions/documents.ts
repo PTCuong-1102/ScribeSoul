@@ -1,6 +1,6 @@
 "use server"
 
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth/server"
 import { db } from "@/lib/db"
 import { documents } from "@/lib/db/schema/documents"
 import { workspaces } from "@/lib/db/schema/workspaces"
@@ -18,7 +18,7 @@ const documentSchema = z.object({
 })
 
 async function checkWorkspaceOwnership(workspaceId: string) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Chưa đăng nhập")
 
   const workspace = await db.query.workspaces.findFirst({

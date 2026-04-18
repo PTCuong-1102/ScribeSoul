@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic'
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth/server"
 import { db } from "@/lib/db"
 import { documentChunks, chunkEmbeddings } from "@/lib/db/schema/ai"
 import { blocks as blocksTable } from "@/lib/db/schema/blocks"
@@ -16,7 +16,7 @@ const ingestSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const session = await auth()
+    const { data: session } = await auth.getSession()
     if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 })
 
     const body = await req.json()

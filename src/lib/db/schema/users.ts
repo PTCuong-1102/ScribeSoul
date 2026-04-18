@@ -6,7 +6,6 @@ import {
   integer,
   uuid,
 } from "drizzle-orm/pg-core"
-import type { AdapterAccount } from "next-auth/adapters"
 
 export const users = pgTable("user", {
   id: uuid("id").notNull().primaryKey().defaultRandom(),
@@ -25,7 +24,7 @@ export const accounts = pgTable(
     userId: uuid("userId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type").$type<AdapterAccount["type"]>().notNull(),
+    type: text("type").notNull(),
     provider: text("provider").notNull(),
     providerAccountId: text("providerAccountId").notNull(),
     refresh_token: text("refresh_token"),

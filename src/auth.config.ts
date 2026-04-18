@@ -1,19 +1,9 @@
-import type { NextAuthConfig } from "next-auth"
+/**
+ * @deprecated Đã thay thế bằng Neon Auth (@neondatabase/auth)
+ * Xem: src/lib/auth/server.ts
+ *
+ * File này không còn được sử dụng. Route protection được xử lý
+ * bởi auth.middleware() trong src/middleware.ts.
+ */
 
-export const authConfig = {
-  providers: [], // Configured in child providers or main auth.ts
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user
-      const isWorkspace = nextUrl.pathname.startsWith("/workspace")
-      if (isWorkspace) {
-        if (isLoggedIn) return true
-        return false // Redirect unauthenticated users to login page
-      }
-      return true
-    },
-  },
-} satisfies NextAuthConfig
+export {}

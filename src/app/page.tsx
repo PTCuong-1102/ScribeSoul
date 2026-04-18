@@ -27,7 +27,7 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 pt-8">
-          <Link href="/workspace/default" className="w-full sm:w-auto h-14 px-8 flex items-center justify-center space-x-3 rounded-full bg-primary text-primary-foreground hover:bg-on-surface transition-all shadow-xl shadow-primary/20 group">
+          <Link href="/workspace" className="w-full sm:w-auto h-14 px-8 flex items-center justify-center space-x-3 rounded-full bg-primary text-primary-foreground hover:bg-on-surface transition-all shadow-xl shadow-primary/20 group">
             <span className="font-sans font-semibold tracking-wide">Vào thư viện của bạn</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>

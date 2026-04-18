@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { aiMessages } from "@/lib/db/schema/ai";
 import { retrieveContext } from "@/lib/ai/retriever";
@@ -10,7 +10,7 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
+    const { data: session } = await auth.getSession();
     if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
 
     const { messages, workspaceId, conversationId } = await req.json();

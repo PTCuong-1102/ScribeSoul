@@ -3,11 +3,11 @@
 import { db } from "@/lib/db"
 import { users } from "@/lib/db/schema/users"
 import { eq } from "drizzle-orm"
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth/server"
 import { revalidatePath } from "next/cache"
 
 export async function getUserSettings() {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
   const user = await db.query.users.findFirst({
@@ -18,7 +18,7 @@ export async function getUserSettings() {
 }
 
 export async function updateProfile(data: { name?: string, image?: string }) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
   await db.update(users)
@@ -34,7 +34,7 @@ export async function updateProfile(data: { name?: string, image?: string }) {
 }
 
 export async function updateAIPreferences(preferences: Record<string, unknown>) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
   // In a real app, you might have a dedicated settings table or a JSONB column on users

@@ -1,6 +1,6 @@
 "use server"
 
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth/server"
 import { db } from "@/lib/db"
 import { workspaces } from "@/lib/db/schema/workspaces"
 import { eq, and } from "drizzle-orm"
@@ -13,7 +13,7 @@ const workspaceSchema = z.object({
 })
 
 export async function createWorkspace(data: z.infer<typeof workspaceSchema>) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Chưa đăng nhập")
 
   const validated = workspaceSchema.parse(data)
@@ -32,7 +32,7 @@ export async function createWorkspace(data: z.infer<typeof workspaceSchema>) {
 }
 
 export async function listWorkspaces() {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) return []
 
   return db.query.workspaces.findMany({
@@ -45,7 +45,7 @@ export async function updateWorkspace(
   id: string,
   data: Partial<z.infer<typeof workspaceSchema>>
 ) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Chưa đăng nhập")
 
   const [updated] = await db
@@ -62,7 +62,7 @@ export async function updateWorkspace(
 }
 
 export async function deleteWorkspace(id: string) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Chưa đăng nhập")
 
   await db

@@ -4,10 +4,10 @@ import { retrieveContext } from "@/lib/ai/retriever"
 import { db } from "@/lib/db"
 import { documents } from "@/lib/db/schema/documents"
 import { eq } from "drizzle-orm"
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth/server"
 
 export async function semanticSearch(workspaceId: string, query: string) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user) throw new Error("Unauthorized")
 
   try {
@@ -29,7 +29,7 @@ export async function semanticSearch(workspaceId: string, query: string) {
 }
 
 export async function getKnowledgeGraph(workspaceId: string) {
-  const session = await auth()
+  const { data: session } = await auth.getSession()
   if (!session?.user) throw new Error("Unauthorized")
 
   try {

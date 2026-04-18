@@ -13,12 +13,15 @@ import {
 } from "@blocknote/core"
 
 interface BlockEditorProps {
+  documentId?: string
   initialContent?: PartialBlock[]
   onChange?: (blocks: PartialBlock[]) => void
+  onSyncStateChange?: (state: "idle" | "saving" | "saved" | "error") => void
 }
 
-export default function BlockEditor({ initialContent, onChange }: BlockEditorProps) {
+export default function BlockEditor({ documentId, initialContent, onChange, onSyncStateChange }: BlockEditorProps) {
   const { theme } = useTheme()
+  const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   const editor = useCreateBlockNote({
     initialContent: initialContent || [
@@ -115,6 +118,34 @@ export default function BlockEditor({ initialContent, onChange }: BlockEditorPro
         onChange={() => {
           if (onChange) {
             onChange(editor.document)
+          }
+          if (documentId && onSyncStateChange) {
+            onSyncStateChange("saving")
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+            saveTimeoutRef.current = setTimeout(async () => {
+              try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const flatBlocks = editor.document.map((b: any, idx: number) => ({
+                  id: b.id,
+                  type: b.type,
+                  content: b.content,
+                  parentBlockId: null, // Keep flat for now
+                  sortOrder: idx,
+                }))
+                
+                await fetch('/api/sync', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    documentId,
+                    upsert: flatBlocks,
+                    deletions: []
+                  })
+                })
+                onSyncStateChange("saved")
+              } catch (e) {
+                onSyncStateChange("error")
+              }
+            }, 1000)
           }
         }}
         className="font-serif editor-scribesoul"
