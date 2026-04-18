@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Sparkles, Save, History, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+import { PartialBlock } from "@blocknote/core"
+
 export function DocumentClientView({ 
   workspaceId, 
   docId, 
@@ -14,7 +16,7 @@ export function DocumentClientView({
 }: { 
   workspaceId: string, 
   docId: string, 
-  initialContent: any 
+  initialContent: PartialBlock[] | undefined 
 }) {
   const [showAssistant, setShowAssistant] = useState(true)
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")

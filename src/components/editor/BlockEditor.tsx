@@ -142,7 +142,7 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
                   })
                 })
                 onSyncStateChange("saved")
-              } catch (e) {
+              } catch {
                 onSyncStateChange("error")
               }
             }, 1000)
