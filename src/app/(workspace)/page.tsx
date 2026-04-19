@@ -29,7 +29,7 @@ export default async function WorkspaceIndex() {
   })
 
   if (defaultWorkspace) {
-    redirect(`/workspace/${defaultWorkspace.id}`)
+    redirect(`/${defaultWorkspace.id}`)
   }
 
   const [newWorkspace] = await db.insert(workspaces).values({
@@ -37,5 +37,5 @@ export default async function WorkspaceIndex() {
     name: 'Thư viện của tôi',
   }).returning()
 
-  redirect(`/workspace/${newWorkspace.id}`)
+  redirect(`/${newWorkspace.id}`)
 }

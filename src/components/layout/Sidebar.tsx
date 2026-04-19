@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useParams, usePathname } from 'next/navigation'
 import { 
   BookOpen, 
   Users, 
@@ -16,20 +16,22 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const navItems = [
-  { name: 'Chương truyện', icon: BookOpen, href: '/workspace/docs' },
-  { name: 'Nhân vật', icon: Users, href: '/workspace/characters' },
-  { name: 'Bối cảnh', icon: MapPin, href: '/workspace/settings-locations' },
-  { name: 'Cốt truyện', icon: Target, href: '/workspace/plots' },
-]
-
 export function Sidebar() {
   const pathname = usePathname()
+  const params = useParams()
+  const workspaceId = params?.workspaceId as string || 'default'
+
+  const navItems = [
+    { name: 'Chương truyện', icon: BookOpen, href: `/${workspaceId}/documents` },
+    { name: 'Nhân vật', icon: Users, href: `/${workspaceId}/characters` },
+    { name: 'Bối cảnh', icon: MapPin, href: `/${workspaceId}/settings-locations` },
+    { name: 'Cốt truyện', icon: Target, href: `/${workspaceId}/plots` },
+  ]
 
   return (
     <aside className="w-[220px] h-screen bg-surface-container-low dark:bg-surface-container-low flex flex-col transition-colors duration-300">
       <div className="p-6">
-        <Link href="/workspace" className="flex items-center space-x-2 group">
+        <Link href={`/${workspaceId}`} className="flex items-center space-x-2 group">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-serif text-xl">
             S
           </div>
