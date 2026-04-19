@@ -57,7 +57,7 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
 
   const handleSelect = (docId: string) => {
     setOpen(false)
-    router.push(`/${workspaceId}/documents/${docId}`)
+    router.push(`/workspace/${workspaceId}/documents/${docId}`)
   }
 
   if (!open) return null

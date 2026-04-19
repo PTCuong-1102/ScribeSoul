@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth/server"
 import { db } from "@/lib/db"
 import { documents } from "@/lib/db/schema/documents"
 import { workspaces } from "@/lib/db/schema/workspaces"
-import { eq, and, asc, ilike } from "drizzle-orm"
+import { eq, and, asc, desc, ilike } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -116,5 +116,27 @@ export async function searchDocuments(workspaceId: string, query: string) {
       ilike(documents.title, `%${query}%`)
     ),
     limit: 10,
+  })
+}
+
+export async function getRecentDocuments(workspaceId: string, limit: number = 5) {
+  await checkWorkspaceOwnership(workspaceId)
+  
+  return db.query.documents.findMany({
+    where: eq(documents.workspaceId, workspaceId),
+    orderBy: [desc(documents.updatedAt)],
+    limit,
+  })
+}
+
+export async function getDocumentsByType(workspaceId: string, type: "character" | "setting" | "plot") {
+  await checkWorkspaceOwnership(workspaceId)
+  
+  return db.query.documents.findMany({
+    where: and(
+      eq(documents.workspaceId, workspaceId),
+      eq(documents.type, type)
+    ),
+    orderBy: [desc(documents.updatedAt)],
   })
 }

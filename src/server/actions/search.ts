@@ -3,7 +3,8 @@
 import { retrieveContext } from "@/lib/ai/retriever"
 import { db } from "@/lib/db"
 import { documents } from "@/lib/db/schema/documents"
-import { eq } from "drizzle-orm"
+import { documentLinks } from "@/lib/db/schema/links"
+import { eq, inArray } from "drizzle-orm"
 import { auth } from "@/lib/auth/server"
 
 export async function semanticSearch(workspaceId: string, query: string) {
@@ -43,15 +44,34 @@ export async function getKnowledgeGraph(workspaceId: string) {
       }
     })
 
-    // In a real app, we'd fetch actual links from document_links table
-    // For now, we'll return the nodes and empty links or mock them if schema allows
+    const docIds = docs.map(d => d.id)
+    let links: { source: string, target: string, label?: string }[] = []
+
+    if (docIds.length > 0) {
+      const dbLinks = await db.query.documentLinks.findMany({
+        where: inArray(documentLinks.sourceId, docIds),
+        columns: {
+          sourceId: true,
+          targetId: true,
+          type: true,
+        }
+      })
+      
+      // Map to the format expected by the frontend graph (usually source, target, label/type)
+      links = dbLinks.map(l => ({
+        source: l.sourceId,
+        target: l.targetId,
+        label: l.type // Optional label depending on the library
+      }))
+    }
+
     return {
       nodes: docs.map(d => ({
         id: d.id,
         label: d.title || "Untitled",
         type: d.type
       })),
-      links: [] // To be implemented with document_links
+      links
     }
   } catch (error) {
     console.error("Knowledge graph error:", error)

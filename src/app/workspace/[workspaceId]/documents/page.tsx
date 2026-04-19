@@ -3,8 +3,9 @@ import { getDocumentTree } from "@/server/actions/documents"
 import Link from 'next/link'
 import { FileText } from 'lucide-react'
 
-export default async function DocumentsPage({ params }: { params: { workspaceId: string } }) {
-  const documents = await getDocumentTree(params.workspaceId).catch(() => []);
+export default async function DocumentsPage({ params }: { params: Promise<{ workspaceId: string }> }) {
+  const { workspaceId } = await params;
+  const documents = await getDocumentTree(workspaceId).catch(() => []);
 
   return (
     <div className="max-w-6xl mx-auto p-12 space-y-8">
@@ -14,7 +15,7 @@ export default async function DocumentsPage({ params }: { params: { workspaceId:
           <p className="text-on-surface-variant font-sans">Chưa có bản thảo nào.</p>
         ) : (
           documents.map(doc => (
-            <Link href={`/${params.workspaceId}/documents/${doc.id}`} key={doc.id}>
+            <Link href={`/workspace/${workspaceId}/documents/${doc.id}`} key={doc.id}>
               <div className="p-6 rounded-2xl bg-surface-container-low hover:bg-surface-container-high transition-colors border border-border/5 group cursor-pointer">
                 <FileText className="w-8 h-8 text-on-surface-variant mb-4 group-hover:text-primary transition-colors" />
                 <h3 className="font-serif text-lg text-on-surface truncate">{doc.title}</h3>

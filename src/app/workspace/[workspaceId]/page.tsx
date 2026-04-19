@@ -7,8 +7,9 @@ import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 import { ProductivityPulse } from '@/components/dashboard/ProductivityPulse'
 import { getDocumentTree } from "@/server/actions/documents"
 
-export default async function DashboardPage({ params }: { params: { workspaceId: string } }) {
-  const documents = await getDocumentTree(params.workspaceId).catch(() => []);
+export default async function DashboardPage({ params }: { params: Promise<{ workspaceId: string }> }) {
+  const { workspaceId } = await params;
+  const documents = await getDocumentTree(workspaceId).catch(() => []);
   const recentDrafts = documents.slice(0, 3); // Get latest 3 drafts
 
   return (
@@ -92,7 +93,7 @@ export default async function DashboardPage({ params }: { params: { workspaceId:
           </div>
         </div>
         
-        <KnowledgeWeb workspaceId={params.workspaceId} />
+        <KnowledgeWeb workspaceId={workspaceId} />
       </section>
     </div>
   )
