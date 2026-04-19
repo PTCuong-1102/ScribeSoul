@@ -51,11 +51,13 @@ export function TopBar() {
         </Button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Button variant="ghost" size="icon" className="rounded-full bg-surface-container-low dark:bg-surface-container border border-border/5">
-              <User className="w-4 h-4 text-on-surface" />
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" size="icon" className="rounded-full bg-surface-container-low dark:bg-surface-container border border-border/5">
+                <User className="w-4 h-4 text-on-surface" />
+              </Button>
+            }
+          />
           <DropdownMenuContent align="end" className="w-56 mt-2 glass border-border/10 rounded-xl">
             <DropdownMenuItem className="cursor-pointer font-sans h-10 rounded-lg">
               Hồ sơ cá nhân
