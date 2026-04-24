@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { blocks } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
 import { eq, asc } from "drizzle-orm"
+import { auth } from "@/lib/auth/server"
 
 /**
  * Converts BlockNote JSON blocks to a basic Markdown string.
@@ -35,10 +36,15 @@ function blocksToMarkdown(documentBlocks: BlockData[]): string {
 }
 
 export async function exportDocumentAsMarkdown(documentId: string) {
+  const { data: session } = await auth.getSession()
+  if (!session?.user?.id) throw new Error("Unauthorized")
+
   const doc = await db.query.documents.findFirst({
-    where: eq(documents.id, documentId)
+    where: eq(documents.id, documentId),
+    with: { workspace: true }
   })
   if (!doc) throw new Error("Document not found");
+  if (doc.workspace.ownerId !== session.user.id) throw new Error("Forbidden");
 
   const docBlocks = await db.query.blocks.findMany({
     where: eq(blocks.documentId, documentId),

@@ -3,10 +3,12 @@ import { getDocument } from '@/server/actions/documents'
 import { DocumentClientView } from '@/components/editor/DocumentClientView'
 import { PartialBlock } from "@blocknote/core"
 
-export default async function DocumentPage({ params }: { params: { workspaceId: string, docId: string } }) {
+export default async function DocumentPage({ params }: { params: Promise<{ workspaceId: string, docId: string }> }) {
+  const { workspaceId, docId } = await params;
+
   let doc
   try {
-    doc = await getDocument(params.docId)
+    doc = await getDocument(docId)
   } catch {
     return <div className="p-12 text-center font-sans">Không tìm thấy tài liệu hoặc bạn không có quyền truy cập.</div>
   }
@@ -23,8 +25,8 @@ export default async function DocumentPage({ params }: { params: { workspaceId: 
 
   return (
     <DocumentClientView 
-      workspaceId={params.workspaceId} 
-      docId={params.docId} 
+      workspaceId={workspaceId} 
+      docId={docId} 
       initialContent={initialContent} 
     />
   )

@@ -1,9 +1,13 @@
 import { streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { auth } from "@/lib/auth/server";
 
 export const runtime = "edge";
 
 export async function POST(req: Request) {
+  const { data: session } = await auth.getSession();
+  if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
+
   const { prompt, context } = await req.json();
 
   const result = await streamText({

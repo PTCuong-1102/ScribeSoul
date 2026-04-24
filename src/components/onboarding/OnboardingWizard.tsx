@@ -1,15 +1,43 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useSyncExternalStore, useCallback } from "react"
 import { Sparkles, ArrowRight, PenTool, Library } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
+const ONBOARDING_KEY = 'scribesoul-onboarding-dismissed'
+
+function subscribeToStorage(callback: () => void) {
+  const handler = (e: StorageEvent) => {
+    if (e.key === ONBOARDING_KEY) callback()
+  }
+  window.addEventListener('storage', handler)
+  // Also listen for custom events for same-tab updates
+  window.addEventListener('onboarding-dismiss', callback)
+  return () => {
+    window.removeEventListener('storage', handler)
+    window.removeEventListener('onboarding-dismiss', callback)
+  }
+}
+
+function getSnapshot(): boolean {
+  return localStorage.getItem(ONBOARDING_KEY) === 'true'
+}
+
+function getServerSnapshot(): boolean {
+  return true // On server, treat as dismissed (don't render)
+}
+
 export function OnboardingWizard() {
   const [step, setStep] = useState(1)
-  const [open, setOpen] = useState(true)
+  const isDismissed = useSyncExternalStore(subscribeToStorage, getSnapshot, getServerSnapshot)
 
-  if (!open) return null
+  const dismiss = useCallback(() => {
+    localStorage.setItem(ONBOARDING_KEY, 'true')
+    window.dispatchEvent(new Event('onboarding-dismiss'))
+  }, [])
+
+  if (isDismissed) return null
 
   const steps = [
     {
@@ -34,7 +62,7 @@ export function OnboardingWizard() {
 
   const next = () => {
     if (step < steps.length) setStep(step + 1)
-    else setOpen(false)
+    else dismiss()
   }
 
   return (
@@ -77,7 +105,7 @@ export function OnboardingWizard() {
           </Button>
           
           <button 
-            onClick={() => setOpen(false)}
+            onClick={dismiss}
             className="mt-6 text-xs text-on-surface-variant/40 hover:text-on-surface-variant/60 font-sans uppercase tracking-widest transition-colors"
           >
             Bỏ qua hướng dẫn

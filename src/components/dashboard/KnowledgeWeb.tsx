@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from "react"
 import { getKnowledgeGraph } from "@/server/actions/search"
 import { Sparkles, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface Node {
   id: string
@@ -157,6 +158,3 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
   )
 }
 
-function cn(...classes: (string | boolean | undefined | null)[]) {
-  return classes.filter(Boolean).join(" ")
-}

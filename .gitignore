@@ -1,1 +1,4 @@
-Nothing needs to be added to the .gitignore file based on the provided changes. The added and modified files (VERCEL_SETUP.md and src/lib/auth/server.ts) are source/config files that should not be ignored.
+node_modules
+.vercel
+.next
+.env

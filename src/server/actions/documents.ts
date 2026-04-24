@@ -110,10 +110,13 @@ export async function getDocumentTree(workspaceId: string) {
 export async function searchDocuments(workspaceId: string, query: string) {
   await checkWorkspaceOwnership(workspaceId)
 
+  // Escape SQL LIKE wildcards to prevent pattern injection
+  const safeQuery = query.replace(/[%_\\]/g, '\\$&')
+
   return db.query.documents.findMany({
     where: and(
       eq(documents.workspaceId, workspaceId),
-      ilike(documents.title, `%${query}%`)
+      ilike(documents.title, `%${safeQuery}%`)
     ),
     limit: 10,
   })
