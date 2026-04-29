@@ -16,8 +16,8 @@ export async function semanticSearch(workspaceId: string, query: string) {
     
     // Group results by document to give a better search experience (like Cmd+K)
     // and map them to the format expected by CommandSearch.tsx
-    return results.map(r => ({
-      id: r.docId + Math.random(), // Unique key for UI
+    return results.map((r, index) => ({
+      id: `${r.docId}-${index}`,
       docId: r.docId,
       title: r.docTitle,
       excerpt: r.content.length > 150 ? r.content.substring(0, 150) + "..." : r.content,

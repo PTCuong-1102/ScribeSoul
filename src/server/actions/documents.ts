@@ -2,9 +2,10 @@
 
 import { auth } from "@/lib/auth/server"
 import { db } from "@/lib/db"
+import { blocks } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
 import { workspaces } from "@/lib/db/schema/workspaces"
-import { eq, and, asc, desc, ilike } from "drizzle-orm"
+import { eq, and, asc, desc, ilike, inArray } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -27,6 +28,40 @@ async function checkWorkspaceOwnership(workspaceId: string) {
 
   if (!workspace) throw new Error("Không có quyền truy cập workspace này")
   return session.user.id
+}
+
+interface ProductivityStats {
+  wordsToday: number
+  streak: number
+  wordsDelta: number
+  percentOfGoal: number
+  dailyGoal: number
+}
+
+function toLocalDayKey(date: Date) {
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, "0")
+  const dd = String(date.getDate()).padStart(2, "0")
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function extractBlockText(content: unknown): string {
+  if (typeof content === "string") return content
+  if (!Array.isArray(content)) return ""
+
+  return content
+    .map((item) => {
+      if (!item || typeof item !== "object") return ""
+      const text = (item as { text?: unknown }).text
+      return typeof text === "string" ? text : ""
+    })
+    .join(" ")
+    .trim()
+}
+
+function countWords(text: string): number {
+  if (!text.trim()) return 0
+  return text.trim().split(/\s+/).length
 }
 
 export async function createDocument(data: z.infer<typeof documentSchema>) {
@@ -142,4 +177,81 @@ export async function getDocumentsByType(workspaceId: string, type: "character" 
     ),
     orderBy: [desc(documents.updatedAt)],
   })
+}
+
+export async function getProductivityStats(workspaceId: string): Promise<ProductivityStats> {
+  await checkWorkspaceOwnership(workspaceId)
+
+  const workspace = await db.query.workspaces.findFirst({
+    where: eq(workspaces.id, workspaceId),
+    columns: { settings: true },
+  })
+
+  const settings = workspace?.settings as Record<string, unknown> | undefined
+  const goalFromSettings = settings?.dailyWordGoal
+  const dailyGoal = typeof goalFromSettings === "number" && goalFromSettings > 0
+    ? Math.floor(goalFromSettings)
+    : 2000
+
+  const workspaceDocs = await db.query.documents.findMany({
+    where: eq(documents.workspaceId, workspaceId),
+    columns: { id: true },
+  })
+
+  if (workspaceDocs.length === 0) {
+    return {
+      wordsToday: 0,
+      streak: 0,
+      wordsDelta: 0,
+      percentOfGoal: 0,
+      dailyGoal,
+    }
+  }
+
+  const docIds = workspaceDocs.map((doc) => doc.id)
+  const workspaceBlocks = await db.query.blocks.findMany({
+    where: inArray(blocks.documentId, docIds),
+    columns: {
+      content: true,
+      updatedAt: true,
+    },
+  })
+
+  const dayWords = new Map<string, number>()
+
+  for (const block of workspaceBlocks) {
+    const words = countWords(extractBlockText(block.content))
+    if (words === 0) continue
+
+    const dayKey = toLocalDayKey(new Date(block.updatedAt))
+    dayWords.set(dayKey, (dayWords.get(dayKey) ?? 0) + words)
+  }
+
+  const today = new Date()
+  const todayKey = toLocalDayKey(today)
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayKey = toLocalDayKey(yesterday)
+
+  const wordsToday = dayWords.get(todayKey) ?? 0
+  const wordsYesterday = dayWords.get(yesterdayKey) ?? 0
+  const wordsDelta = wordsToday - wordsYesterday
+
+  const daysWithActivity = new Set(dayWords.keys())
+  let streak = 0
+  const cursor = new Date(today)
+  while (daysWithActivity.has(toLocalDayKey(cursor))) {
+    streak += 1
+    cursor.setDate(cursor.getDate() - 1)
+  }
+
+  const percentOfGoal = Math.min(100, Math.round((wordsToday / dailyGoal) * 100))
+
+  return {
+    wordsToday,
+    streak,
+    wordsDelta,
+    percentOfGoal,
+    dailyGoal,
+  }
 }

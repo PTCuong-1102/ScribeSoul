@@ -21,13 +21,13 @@ export function Sidebar() {
   const pathname = usePathname()
   const params = useParams()
   const router = useRouter()
-  const workspaceId = params?.workspaceId as string || 'default'
+  const workspaceId = typeof params?.workspaceId === "string" ? params.workspaceId : null
 
   const [recentDocs, setRecentDocs] = useState<{id: string, title: string}[]>([])
   const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
-    if (workspaceId !== 'default') {
+    if (workspaceId) {
       getRecentDocuments(workspaceId, 5)
         .then((docs) => setRecentDocs(docs))
         .catch(console.error)
@@ -35,7 +35,7 @@ export function Sidebar() {
   }, [workspaceId])
 
   const handleCreateNew = async () => {
-    if (workspaceId === 'default' || isCreating) return
+    if (!workspaceId || isCreating) return
     setIsCreating(true)
     try {
       const doc = await createDocument({
@@ -53,16 +53,16 @@ export function Sidebar() {
   }
 
   const navItems = [
-    { name: 'Chương truyện', icon: BookOpen, href: `/workspace/${workspaceId}/documents` },
-    { name: 'Nhân vật', icon: Users, href: `/workspace/${workspaceId}/characters` },
-    { name: 'Bối cảnh', icon: MapPin, href: `/workspace/${workspaceId}/settings-locations` },
-    { name: 'Cốt truyện', icon: Target, href: `/workspace/${workspaceId}/plots` },
+    { name: 'Chương truyện', icon: BookOpen, href: workspaceId ? `/workspace/${workspaceId}/documents` : "/workspace" },
+    { name: 'Nhân vật', icon: Users, href: workspaceId ? `/workspace/${workspaceId}/characters` : "/workspace" },
+    { name: 'Bối cảnh', icon: MapPin, href: workspaceId ? `/workspace/${workspaceId}/settings-locations` : "/workspace" },
+    { name: 'Cốt truyện', icon: Target, href: workspaceId ? `/workspace/${workspaceId}/plots` : "/workspace" },
   ]
 
   return (
     <aside className="w-[220px] h-screen bg-surface-container-low dark:bg-surface-container-low flex flex-col transition-colors duration-300">
       <div className="p-6">
-        <Link href={`/workspace/${workspaceId}`} className="flex items-center space-x-2 group">
+        <Link href={workspaceId ? `/workspace/${workspaceId}` : "/workspace"} className="flex items-center space-x-2 group">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-serif text-xl">
             S
           </div>
@@ -134,7 +134,7 @@ export function Sidebar() {
             {recentDocs.length === 0 ? (
                <p className="px-2 text-xs text-on-surface-variant font-sans italic opacity-50">Trống</p>
             ) : recentDocs.map(doc => (
-              <Link key={doc.id} href={`/workspace/${workspaceId}/documents/${doc.id}`} className="w-full flex items-center space-x-2 px-2 py-1.5 rounded-md hover:bg-surface-container-high/40 transition-all group">
+              <Link key={doc.id} href={workspaceId ? `/workspace/${workspaceId}/documents/${doc.id}` : "/workspace"} className="w-full flex items-center space-x-2 px-2 py-1.5 rounded-md hover:bg-surface-container-high/40 transition-all group">
                 <ChevronRight className="w-3 h-3 text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity" />
                 <span className="font-sans text-sm text-on-surface-variant group-hover:text-on-surface truncate">{doc.title}</span>
               </Link>
@@ -148,7 +148,7 @@ export function Sidebar() {
           <Sparkles className="w-4 h-4 transition-colors group-hover:animate-pulse" />
           <span className="font-sans text-sm font-medium">Soul Assistant</span>
         </button>
-        <Link href={`/workspace/${workspaceId}/settings`} className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all">
+        <Link href={workspaceId ? `/workspace/${workspaceId}/settings` : "/workspace"} className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all">
           <Settings className="w-4 h-4" />
           <span className="font-sans text-sm font-medium">Cài đặt</span>
         </Link>

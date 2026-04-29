@@ -99,9 +99,11 @@ src/
     ```env
     DATABASE_URL=your_neon_postgres_url
     OPENAI_API_KEY=your_openai_api_key
-    NEXTAUTH_SECRET=your_secret_key
-    AUTH_GOOGLE_ID=...
-    AUTH_GOOGLE_SECRET=...
+    NEON_AUTH_BASE_URL=https://your-domain.com/auth
+    NEON_AUTH_COOKIE_SECRET=at-least-32-characters-random-string
+    OPENAI_CHAT_MODEL=gpt-4o
+    OPENAI_AUTOCOMPLETE_MODEL=gpt-4o-mini
+    OPENAI_EMBEDDING_MODEL=text-embedding-3-small
     ```
 
 4.  **Khởi tạo Database:**

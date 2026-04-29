@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { aiMessages } from "@/lib/db/schema/ai";
 import { retrieveContext } from "@/lib/ai/retriever";
+import { AI_CONFIG } from "@/lib/ai/config";
 
 export const maxDuration = 30;
 
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
 
     // 2. Stream AI Response
     const result = streamText({
-      model: openai("gpt-4o"),
+      model: openai(AI_CONFIG.chatModel),
       system: systemPrompt,
       messages,
       onFinish: async ({ text, usage }) => {

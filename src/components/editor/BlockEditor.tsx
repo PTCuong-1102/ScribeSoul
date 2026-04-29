@@ -19,6 +19,20 @@ interface BlockEditorProps {
   onSyncStateChange?: (state: "idle" | "saving" | "saved" | "error") => void
 }
 
+function extractTextFromBlockContent(content: unknown): string {
+  if (typeof content === "string") return content
+  if (!Array.isArray(content)) return ""
+
+  return content
+    .map((item) => {
+      if (!item || typeof item !== "object") return ""
+      const text = (item as { text?: unknown }).text
+      return typeof text === "string" ? text : ""
+    })
+    .join(" ")
+    .trim()
+}
+
 export default function BlockEditor({ documentId, initialContent, onChange, onSyncStateChange }: BlockEditorProps) {
   const { theme } = useTheme()
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
@@ -47,25 +61,22 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
       subtext: "Hãy để Soul Assistant viết tiếp ý tưởng của bạn",
       onItemClick: () => soulWrite(editor),
     },
-    {
-      title: "Soul Refine",
-      aliases: ["ai", "improve", "polish"],
-      group: "AI Tools",
-      icon: <Wand2 className="w-4 h-4 text-primary" />,
-      subtext: "Trau chuốt văn phong của đoạn này",
-      onItemClick: () => {
-        // Simple placeholder for refine logic
-        alert("Refine feature coming soon!");
+      {
+        title: "Soul Refine",
+        aliases: ["ai", "improve", "polish"],
+        group: "AI Tools",
+        icon: <Wand2 className="w-4 h-4 text-primary" />,
+        subtext: "Trau chuốt văn phong của đoạn này",
+        onItemClick: () => soulRefine(editor),
       },
-    },
-  ] as DefaultReactSuggestionItem[];
+    ] as DefaultReactSuggestionItem[];
 
   // AI Autocomplete function
   const soulWrite = async (editor: BlockNoteEditor) => {
     const currentBlock = editor.getTextCursorPosition().block;
     const prevBlocks = editor.document.slice(0, editor.document.indexOf(currentBlock) + 1);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const context = prevBlocks.map(b => (b.content as any)?.[0]?.text || "").join("\n");
+    const context = prevBlocks.map((b) => extractTextFromBlockContent(b.content)).join("\n");
+    const currentText = extractTextFromBlockContent(currentBlock.content)
     
     // Insert a temporary "AI is writing..." block or similar
     const loadingBlock: PartialBlock = {
@@ -79,8 +90,7 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
       const response = await fetch("/api/ai/autocomplete", {
         method: "POST",
         body: JSON.stringify({ 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          prompt: (currentBlock.content as any)?.[0]?.text || "",
+          prompt: currentText,
           context 
         }),
       });
@@ -107,6 +117,55 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
        editor.updateBlock(newBlock, {
          content: "Lỗi khi kết nối với Soul Assistant.",
        });
+    }
+  }
+
+  const soulRefine = async (editor: BlockNoteEditor) => {
+    const currentBlock = editor.getTextCursorPosition().block
+    const currentText = extractTextFromBlockContent(currentBlock.content)
+    if (!currentText.trim()) return
+
+    const prevBlocks = editor.document.slice(0, editor.document.indexOf(currentBlock) + 1)
+    const context = prevBlocks.map((b) => extractTextFromBlockContent(b.content)).join("\n")
+
+    const loadingBlock: PartialBlock = {
+      type: "paragraph",
+      content: "Soul Assistant đang tinh chỉnh đoạn văn...",
+    }
+    editor.insertBlocks([loadingBlock], currentBlock, "after")
+    const refinedBlock = editor.getTextCursorPosition().block
+
+    try {
+      const response = await fetch("/api/ai/autocomplete", {
+        method: "POST",
+        body: JSON.stringify({
+          prompt: currentText,
+          context,
+          mode: "refine",
+        }),
+      })
+
+      if (!response.body) return
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let fullText = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        fullText += decoder.decode(value)
+
+        editor.updateBlock(refinedBlock, {
+          type: "paragraph",
+          content: fullText,
+        })
+      }
+    } catch (error) {
+      console.error("AI Refine Error:", error)
+      editor.updateBlock(refinedBlock, {
+        content: "Lỗi khi tinh chỉnh đoạn văn với Soul Assistant.",
+      })
     }
   }
 

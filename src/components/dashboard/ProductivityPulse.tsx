@@ -1,15 +1,24 @@
-"use client"
-
 import React from "react"
 import { TrendingUp, Award, Zap } from "lucide-react"
 
-export function ProductivityPulse() {
-  // In a real app, these would come from the database/analytics service
-  const stats = {
-    wordsToday: 1240,
-    streak: 12,
-    percentOfGoal: 62
+interface ProductivityPulseProps {
+  stats: {
+    wordsToday: number
+    streak: number
+    wordsDelta: number
+    percentOfGoal: number
+    dailyGoal: number
   }
+}
+
+export function ProductivityPulse({ stats }: ProductivityPulseProps) {
+  const trendLabel = stats.wordsDelta >= 0
+    ? `+${stats.wordsDelta.toLocaleString()} so với hôm qua`
+    : `${stats.wordsDelta.toLocaleString()} so với hôm qua`
+
+  const insight = stats.wordsToday > 0
+    ? `Hôm nay bạn đã viết ${stats.wordsToday.toLocaleString()} từ trên mục tiêu ${stats.dailyGoal.toLocaleString()} từ.`
+    : "Bắt đầu một đoạn đầu tiên hôm nay để duy trì nhịp viết của bạn."
 
   return (
     <div className="bg-surface-container-low dark:bg-surface-container rounded-3xl p-8 space-y-6 flex flex-col justify-center border border-border/5 group hover:shadow-xl transition-all duration-500">
@@ -41,7 +50,7 @@ export function ProductivityPulse() {
       <div className="flex items-center space-x-4 pt-2">
         <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-surface text-secondary border border-secondary/10">
           <TrendingUp className="w-3 h-3" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">+{Math.round(stats.wordsToday * 0.1)} so với hôm qua</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter">{trendLabel}</span>
         </div>
         <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-primary/5 text-primary">
           <Award className="w-3 h-3" />
@@ -50,7 +59,7 @@ export function ProductivityPulse() {
       </div>
 
       <p className="font-sans text-xs text-on-surface-variant italic leading-relaxed pt-2 opacity-60 group-hover:opacity-100 transition-opacity">
-        &quot;Năng suất của bạn đang ở mức cao nhất vào khung giờ 14h-16h. Soul Assistant đang chuẩn bị bối cảnh cho chương tiếp theo.&quot;
+        {insight}
       </p>
     </div>
   )

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { auth } from '@/lib/auth/server'
 import { db } from '@/lib/db'
 import { workspaces } from '@/lib/db/schema/workspaces'

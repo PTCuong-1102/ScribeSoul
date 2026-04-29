@@ -5,11 +5,18 @@ import { Button } from "@/components/ui/button"
 import { KnowledgeWeb } from '@/components/dashboard/KnowledgeWeb'
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 import { ProductivityPulse } from '@/components/dashboard/ProductivityPulse'
-import { getDocumentTree } from "@/server/actions/documents"
+import { getDocumentTree, getProductivityStats } from "@/server/actions/documents"
 
 export default async function DashboardPage({ params }: { params: Promise<{ workspaceId: string }> }) {
   const { workspaceId } = await params;
   const documents = await getDocumentTree(workspaceId).catch(() => []);
+  const productivityStats = await getProductivityStats(workspaceId).catch(() => ({
+    wordsToday: 0,
+    streak: 0,
+    wordsDelta: 0,
+    percentOfGoal: 0,
+    dailyGoal: 2000,
+  }));
   const recentDrafts = documents.slice(0, 3); // Get latest 3 drafts
 
   return (
@@ -41,7 +48,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ work
             </div>
           </Button>
         </div>
-        <ProductivityPulse />
+        <ProductivityPulse stats={productivityStats} />
       </div>
 
       {/* Recent Drafts */}

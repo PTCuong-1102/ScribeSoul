@@ -4,13 +4,25 @@ type NeonAuth = ReturnType<typeof createNeonAuth>
 
 let _auth: NeonAuth | null = null
 
+function getRequiredAuthEnv() {
+  const baseUrl = process.env.NEON_AUTH_BASE_URL
+  const secret = process.env.NEON_AUTH_COOKIE_SECRET
+
+  if (!baseUrl) {
+    throw new Error("NEON_AUTH_BASE_URL is required. Please set it in your environment variables.")
+  }
+
+  if (!secret || secret.length < 32) {
+    throw new Error("NEON_AUTH_COOKIE_SECRET must be at least 32 characters long.")
+  }
+
+  return { baseUrl, secret }
+}
+
 function getAuth(): NeonAuth {
   if (_auth) return _auth
 
-  // During build or when env vars are missing, create with placeholder values.
-  // The actual endpoints will never be reached at build time.
-  const baseUrl = process.env.NEON_AUTH_BASE_URL || 'http://localhost:3000/auth'
-  const secret = process.env.NEON_AUTH_COOKIE_SECRET || 'build-time-placeholder-secret-32chars!'
+  const { baseUrl, secret } = getRequiredAuthEnv()
 
   _auth = createNeonAuth({
     baseUrl,
@@ -27,12 +39,7 @@ function getAuth(): NeonAuth {
  * Call this at the start of any auth-dependent server action or API route.
  */
 export function validateAuthEnv() {
-  if (!process.env.NEON_AUTH_BASE_URL) {
-    throw new Error('NEON_AUTH_BASE_URL is required. Please set it in your environment variables.')
-  }
-  if (!process.env.NEON_AUTH_COOKIE_SECRET || process.env.NEON_AUTH_COOKIE_SECRET.length < 32) {
-    throw new Error('NEON_AUTH_COOKIE_SECRET must be at least 32 characters long.')
-  }
+  getRequiredAuthEnv()
 }
 
 // Proxy object that lazily initializes auth on first property access
