@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { aiMessages } from "@/lib/db/schema/ai";
 import { retrieveContext } from "@/lib/ai/retriever";
 import { AI_CONFIG } from "@/lib/ai/config";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const maxDuration = 30;
 
@@ -16,6 +17,27 @@ export async function POST(req: Request) {
 
     const { messages, workspaceId, conversationId } = await req.json();
     const lastMessage = messages[messages.length - 1].content;
+
+    const rateLimitKey = `chat:${session.user.id}:${workspaceId}`;
+    const rateLimitResult = await checkRateLimit(rateLimitKey, 20, "1 h");
+    if (!rateLimitResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: "Too many chat requests",
+          code: "RATE_LIMIT_EXCEEDED",
+          retryAfter: new Date(rateLimitResult.reset).toISOString(),
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "X-RateLimit-Limit": "20",
+            "X-RateLimit-Remaining": String(rateLimitResult.remaining),
+            "X-RateLimit-Reset": String(rateLimitResult.reset),
+          },
+        }
+      );
+    }
 
     // 1. Retrieve Context (RAG)
     const contextResults = await retrieveContext(workspaceId, lastMessage, 5);

@@ -46,42 +46,51 @@ export async function POST(req: Request) {
         ))
     }
 
-    // Process upserts (One-by-one or batch depending on complexity)
-    // For simplicity, we'll use a transaction for batch upserts
-    await db.transaction(async (tx) => {
-      for (const item of validated.upsert) {
-        if (item.id) {
-          await tx.insert(blocks)
-            .values({
-              id: item.id,
+    // Process upserts with transaction
+    if (validated.upsert.length > 0) {
+      await db.transaction(async (tx) => {
+        for (const item of validated.upsert) {
+          if (item.id) {
+            // Check if block exists
+            const existing = await tx.query.blocks.findFirst({
+              where: eq(blocks.id, item.id),
+            })
+
+            if (existing) {
+              // Update existing block
+              await tx.update(blocks)
+                .set({
+                  content: item.content,
+                  sortOrder: item.sortOrder,
+                  type: item.type,
+                  parentBlockId: item.parentBlockId,
+                  updatedAt: new Date()
+                })
+                .where(eq(blocks.id, item.id))
+            } else {
+              // Insert new block with specific ID
+              await tx.insert(blocks).values({
+                id: item.id,
+                documentId: validated.documentId,
+                type: item.type,
+                content: item.content,
+                sortOrder: item.sortOrder,
+                parentBlockId: item.parentBlockId,
+              })
+            }
+          } else {
+            // Insert new block (ID auto-generated)
+            await tx.insert(blocks).values({
               documentId: validated.documentId,
               type: item.type,
               content: item.content,
               sortOrder: item.sortOrder,
               parentBlockId: item.parentBlockId,
-              updatedAt: new Date()
             })
-            .onConflictDoUpdate({
-              target: [blocks.id],
-              set: {
-                content: item.content,
-                sortOrder: item.sortOrder,
-                type: item.type,
-                parentBlockId: item.parentBlockId,
-                updatedAt: new Date()
-              }
-            })
-        } else {
-          await tx.insert(blocks).values({
-            documentId: validated.documentId,
-            type: item.type,
-            content: item.content,
-            sortOrder: item.sortOrder,
-            parentBlockId: item.parentBlockId,
-          })
+          }
         }
-      }
-    })
+      })
+    }
 
     // Update document updatedAt timestamp
     await db.update(documents)

@@ -255,3 +255,40 @@ export async function getProductivityStats(workspaceId: string): Promise<Product
     dailyGoal,
   }
 }
+
+export async function moveDocument(documentId: string, newParentId: string | null) {
+  const existing = await db.query.documents.findFirst({
+    where: eq(documents.id, documentId),
+  })
+  if (!existing) throw new Error("Document không tồn tại")
+
+  await checkWorkspaceOwnership(existing.workspaceId)
+
+  // Prevent circular references
+  if (newParentId === documentId) {
+    throw new Error("Không thể di chuyển tài liệu vào chính nó")
+  }
+
+  // If moving to a parent, verify parent exists and is in same workspace
+  if (newParentId) {
+    const parent = await db.query.documents.findFirst({
+      where: eq(documents.id, newParentId),
+    })
+    if (!parent) throw new Error("Tài liệu cha không tồn tại")
+    if (parent.workspaceId !== existing.workspaceId) {
+      throw new Error("Không thể di chuyển giữa các workspace khác nhau")
+    }
+  }
+
+  const [updated] = await db
+    .update(documents)
+    .set({
+      parentId: newParentId,
+      updatedAt: new Date(),
+    })
+    .where(eq(documents.id, documentId))
+    .returning()
+
+  revalidatePath(`/workspace/${existing.workspaceId}`)
+  return updated
+}
