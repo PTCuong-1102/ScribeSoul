@@ -1,12 +1,20 @@
 import { auth } from '@/lib/auth/server'
 import { NextRequest } from 'next/server'
 
-const authMiddleware = auth.middleware({
-  loginUrl: '/login',
-})
+let authMiddleware: ((request: NextRequest) => Response | Promise<Response>) | null = null
 
-export function proxy(request: NextRequest) {
-  return authMiddleware(request)
+function getAuthMiddleware() {
+  if (!authMiddleware) {
+    authMiddleware = auth.middleware({
+      loginUrl: '/login',
+    })
+  }
+
+  return authMiddleware
+}
+
+export default function proxy(request: NextRequest) {
+  return getAuthMiddleware()(request)
 }
 
 export const config = {
