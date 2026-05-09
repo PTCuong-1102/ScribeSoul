@@ -15,7 +15,7 @@ export default function AuthLayout({
       <div className="hidden lg:flex flex-col items-center justify-center p-12 bg-surface-container-low dark:bg-surface relative overflow-hidden">
         {/* Artistic background overlay */}
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')] dark:opacity-20"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-primary/5"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-secondary/5 via-transparent to-primary/5"></div>
         
         <div className="relative z-10 max-w-lg text-center space-y-6">
           <blockquote className="text-4xl font-serif italic text-on-surface leading-tight">
