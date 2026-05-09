@@ -66,7 +66,10 @@ function createDisabledAuth(): NeonAuth {
       // The app pages will get the mock session from auth.getSession()
       return NextResponse.next()
     },
-  } as NeonAuth
+  // Cast through `unknown` because this dev-mode mock intentionally only implements
+  // the subset of NeonAuth methods used by the application (getSession, signIn, signUp, signOut).
+  // Methods like resetPassword, verifyEmail, etc. are not needed in local development.
+  } as unknown as NeonAuth
 }
 
 function getAuth(): NeonAuth {

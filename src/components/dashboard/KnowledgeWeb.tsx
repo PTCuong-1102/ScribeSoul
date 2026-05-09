@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef, useCallback } from "react"
 import { getKnowledgeGraph } from "@/server/actions/search"
 import { Sparkles, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -20,11 +20,18 @@ interface Link {
   target: string
 }
 
+// Threshold for total kinetic energy below which the simulation is considered stable
+const KINETIC_ENERGY_THRESHOLD = 0.1
+// Maximum number of simulation ticks to prevent infinite loops
+const MAX_SIMULATION_TICKS = 300
+
 export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
   const [nodes, setNodes] = useState<Node[]>([])
   const [links, setLinks] = useState<Link[]>([])
   const [loading, setLoading] = useState(true)
   const svgRef = useRef<SVGSVGElement>(null)
+  const tickCountRef = useRef(0)
+  const isSimulatingRef = useRef(false)
 
   useEffect(() => {
     async function loadData() {
@@ -40,6 +47,8 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
         }))
         setNodes(initialNodes)
         setLinks(data.links)
+        tickCountRef.current = 0
+        isSimulatingRef.current = true
       } catch (e) {
         console.error(e)
       } finally {
@@ -49,53 +58,71 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
     loadData()
   }, [workspaceId])
 
-  // Simple Force-Directed Simulation
+  // Simple Force-Directed Simulation with convergence detection
+  const simulationStep = useCallback(() => {
+    setNodes(prevNodes => {
+      let totalKineticEnergy = 0
+
+      const newNodes = prevNodes.map(node => {
+        let fx = 0, fy = 0
+
+        // Repulsion from other nodes
+        prevNodes.forEach(other => {
+          if (node.id === other.id) return
+          const dx = node.x - other.x
+          const dy = node.y - other.y
+          const distSq = dx * dx + dy * dy + 0.1
+          const force = 1000 / distSq
+          fx += (dx / Math.sqrt(distSq)) * force
+          fy += (dy / Math.sqrt(distSq)) * force
+        })
+
+        // Attraction to center
+        const centerX = 250, centerY = 200
+        fx += (centerX - node.x) * 0.01
+        fy += (centerY - node.y) * 0.01
+
+        // Drag/Friction
+        const vx = (node.vx + fx) * 0.8
+        const vy = (node.vy + fy) * 0.8
+
+        totalKineticEnergy += vx * vx + vy * vy
+
+        return {
+          ...node,
+          x: node.x + vx,
+          y: node.y + vy,
+          vx,
+          vy
+        }
+      })
+
+      // Check if simulation has converged or exceeded max ticks
+      tickCountRef.current += 1
+      if (totalKineticEnergy < KINETIC_ENERGY_THRESHOLD || tickCountRef.current >= MAX_SIMULATION_TICKS) {
+        isSimulatingRef.current = false
+      }
+
+      return newNodes
+    })
+  }, [])
+
   useEffect(() => {
     if (nodes.length === 0 || loading) return
 
     let animationFrameId: number
 
     const update = () => {
-      setNodes(prevNodes => {
-        const newNodes = prevNodes.map(node => {
-          let fx = 0, fy = 0
-
-          // Repulsion from other nodes
-          prevNodes.forEach(other => {
-            if (node.id === other.id) return
-            const dx = node.x - other.x
-            const dy = node.y - other.y
-            const distSq = dx * dx + dy * dy + 0.1
-            const force = 1000 / distSq
-            fx += (dx / Math.sqrt(distSq)) * force
-            fy += (dy / Math.sqrt(distSq)) * force
-          })
-
-          // Attraction to center
-          const centerX = 250, centerY = 200
-          fx += (centerX - node.x) * 0.01
-          fy += (centerY - node.y) * 0.01
-
-          // Drag/Friction
-          const vx = (node.vx + fx) * 0.8
-          const vy = (node.vy + fy) * 0.8
-
-          return {
-            ...node,
-            x: node.x + vx,
-            y: node.y + vy,
-            vx,
-            vy
-          }
-        })
-        return newNodes
-      })
+      if (!isSimulatingRef.current) return // Stop when converged
+      simulationStep()
       animationFrameId = requestAnimationFrame(update)
     }
 
+    isSimulatingRef.current = true
+    tickCountRef.current = 0
     animationFrameId = requestAnimationFrame(update)
     return () => cancelAnimationFrame(animationFrameId)
-  }, [loading, nodes.length])
+  }, [loading, nodes.length, simulationStep])
 
   if (loading) return (
     <div className="w-full h-[400px] flex items-center justify-center bg-surface-container-lowest/30 rounded-3xl border border-border/5">
@@ -157,4 +184,3 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
     </div>
   )
 }
-

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, jsonb } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, uuid, jsonb, index } from "drizzle-orm/pg-core"
 import { users } from "./users"
 
 export const workspaces = pgTable("workspace", {
@@ -10,4 +10,6 @@ export const workspaces = pgTable("workspace", {
   settings: jsonb("settings").default({}).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-})
+}, (table) => ({
+  ownerIdx: index("workspace_owner_idx").on(table.ownerId),
+}))

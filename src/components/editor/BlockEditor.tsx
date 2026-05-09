@@ -36,6 +36,22 @@ function extractTextFromBlockContent(content: unknown): string {
 export default function BlockEditor({ documentId, initialContent, onChange, onSyncStateChange }: BlockEditorProps) {
   const { theme } = useTheme()
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const ingestTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  // Track previous block IDs to detect deletions
+  const prevBlockIdsRef = React.useRef<Set<string>>(new Set())
+
+  // Initialize prevBlockIdsRef from initial content
+  React.useEffect(() => {
+    if (initialContent) {
+      const ids = new Set<string>()
+      for (const b of initialContent) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const id = (b as any).id
+        if (typeof id === "string") ids.add(id)
+      }
+      prevBlockIdsRef.current = ids
+    }
+  }, [initialContent])
 
   const editor = useCreateBlockNote({
     initialContent: initialContent || [
@@ -71,6 +87,25 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
       },
     ] as DefaultReactSuggestionItem[];
 
+  /**
+   * Trigger document ingestion (chunking + embedding) after sync.
+   * Debounced to 5 seconds to avoid excessive API calls during rapid editing.
+   */
+  const triggerIngest = (docId: string) => {
+    if (ingestTimeoutRef.current) clearTimeout(ingestTimeoutRef.current)
+    ingestTimeoutRef.current = setTimeout(async () => {
+      try {
+        await fetch('/api/ingest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ documentId: docId })
+        })
+      } catch (error) {
+        console.error("[INGEST_TRIGGER]", error)
+      }
+    }, 5000)
+  }
+
   // AI Autocomplete function
   const soulWrite = async (editor: BlockNoteEditor) => {
     const currentBlock = editor.getTextCursorPosition().block;
@@ -81,7 +116,7 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
     // Insert a temporary "AI is writing..." block or similar
     const loadingBlock: PartialBlock = {
       type: "paragraph",
-      content: "Soul Assistant đang suy nghĩ...",
+      content: [{ type: "text", text: "Soul Assistant đang suy nghĩ...", styles: {} }],
     };
     editor.insertBlocks([loadingBlock], currentBlock, "after");
     const newBlock = editor.getTextCursorPosition().block;
@@ -106,16 +141,16 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
         const chunk = decoder.decode(value);
         fullText += chunk;
         
-        // Update the block content
+        // Update the block content using InlineContent[] format
         editor.updateBlock(newBlock, {
           type: "paragraph",
-          content: fullText,
+          content: [{ type: "text", text: fullText, styles: {} }],
         });
       }
     } catch (error) {
        console.error("AI Error:", error);
        editor.updateBlock(newBlock, {
-         content: "Lỗi khi kết nối với Soul Assistant.",
+         content: [{ type: "text", text: "Lỗi khi kết nối với Soul Assistant.", styles: {} }],
        });
     }
   }
@@ -130,7 +165,7 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
 
     const loadingBlock: PartialBlock = {
       type: "paragraph",
-      content: "Soul Assistant đang tinh chỉnh đoạn văn...",
+      content: [{ type: "text", text: "Soul Assistant đang tinh chỉnh đoạn văn...", styles: {} }],
     }
     editor.insertBlocks([loadingBlock], currentBlock, "after")
     const refinedBlock = editor.getTextCursorPosition().block
@@ -156,15 +191,16 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
         if (done) break
         fullText += decoder.decode(value)
 
+        // Update the block content using InlineContent[] format
         editor.updateBlock(refinedBlock, {
           type: "paragraph",
-          content: fullText,
+          content: [{ type: "text", text: fullText, styles: {} }],
         })
       }
     } catch (error) {
       console.error("AI Refine Error:", error)
       editor.updateBlock(refinedBlock, {
-        content: "Lỗi khi tinh chỉnh đoạn văn với Soul Assistant.",
+        content: [{ type: "text", text: "Lỗi khi tinh chỉnh đoạn văn với Soul Assistant.", styles: {} }],
       })
     }
   }
@@ -184,23 +220,38 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
             saveTimeoutRef.current = setTimeout(async () => {
               try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const flatBlocks = editor.document.map((b: any, idx: number) => ({
+                const currentBlocks = editor.document.map((b: any, idx: number) => ({
                   id: b.id,
                   type: b.type,
                   content: b.content,
-                  parentBlockId: null, // Keep flat for now
+                  parentBlockId: b.props?.parentBlockId || null,
                   sortOrder: idx,
                 }))
-                
+
+                // Detect deleted blocks by comparing current IDs with previous IDs
+                const currentIds = new Set(currentBlocks.map((b: { id: string }) => b.id))
+                const deletions: string[] = []
+                for (const prevId of prevBlockIdsRef.current) {
+                  if (!currentIds.has(prevId)) {
+                    deletions.push(prevId)
+                  }
+                }
+                // Update the ref for next comparison
+                prevBlockIdsRef.current = currentIds
+
                 await fetch('/api/sync', {
                   method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     documentId,
-                    upsert: flatBlocks,
-                    deletions: []
+                    upsert: currentBlocks,
+                    deletions
                   })
                 })
                 onSyncStateChange("saved")
+
+                // Trigger ingest after successful sync (debounced 5s)
+                triggerIngest(documentId)
               } catch {
                 onSyncStateChange("error")
               }

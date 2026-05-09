@@ -66,21 +66,26 @@ export async function POST(req: Request) {
       messages,
       onFinish: async ({ text, usage }) => {
         // Save conversation and messages to DB
-        // (Simplified for brevity: saving to existing conversation)
         if (conversationId) {
+          // Save user message with zeroed usage (usage belongs to the response)
           await db.insert(aiMessages).values([
             {
               conversationId: conversationId,
               role: "user",
               content: lastMessage,
-              tokenUsage: { promptTokens: usage.inputTokens, completionTokens: 0 },
+              tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
             },
             {
               conversationId: conversationId,
               role: "assistant",
               content: text,
               citations: contextResults.map(r => ({ docId: r.docId, title: r.docTitle })),
-              tokenUsage: { promptTokens: 0, completionTokens: usage.outputTokens },
+              // Store full token usage on the assistant message for accurate tracking
+              tokenUsage: {
+                promptTokens: usage.inputTokens ?? 0,
+                completionTokens: usage.outputTokens ?? 0,
+                totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+              },
             }
           ]);
         }

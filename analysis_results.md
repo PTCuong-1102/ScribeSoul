@@ -1,468 +1,361 @@
-# 🔍 Phân Tích Chi Tiết Dự Án ScribeSoul
+# 🖋️ ScribeSoul — Phân tích dự án chi tiết
 
-## 1. Tổng Quan Dự Án
+> **Thời điểm phân tích:** 2026-05-09  
+> **Người phân tích:** Antigravity (Claude Sonnet 4.6 Thinking)
 
-**ScribeSoul** là một nền tảng viết sáng tạo (creative writing platform) tích hợp AI, được thiết kế đặc biệt dành cho **nhà văn, tiểu thuyết gia, và những người sáng tạo nội dung văn học**. Sản phẩm kết hợp giữa:
+---
 
-- **Editor block-based kiểu Notion** để viết và tổ chức nội dung
-- **Hệ thống liên kết hai chiều (bi-directional linking)** như Obsidian
-- **AI RAG (Retrieval-Augmented Generation)** hiểu ngữ cảnh nhân vật, cốt truyện, bối cảnh
+## 1. Tổng quan dự án
 
-> [!IMPORTANT]
-> **Điểm khác biệt cốt lõi**: ScribeSoul không phải là một trình soạn thảo với AI bổ sung. Nó là một **"Curator thông minh"** — AI hiểu toàn bộ thế giới quan của tác phẩm, có thể phát hiện lỗ hổng cốt truyện, phân tích động lực nhân vật, và gợi ý sáng tạo dựa trên toàn bộ tri thức đã viết.
+**ScribeSoul** là một nền tảng viết sáng tạo tích hợp AI, được xây dựng cho nhà văn. Dự án có ba trụ cột:
 
-### Thông số dự án
+| Trụ cột | Mô tả | Trạng thái |
+|---|---|---|
+| Deep Work Editor | Block-based editor (BlockNote) | ✅ Đã triển khai |
+| Semantic Knowledge Base | RAG với pgvector | ⚠️ Một phần hoàn thiện |
+| Context-Aware AI | Soul Assistant chat, autocomplete | ✅ Đã triển khai |
 
-| Thuộc tính | Giá trị |
+### Stack kỹ thuật
+- **Framework:** Next.js 16 (App Router) + React 19
+- **DB:** Neon PostgreSQL + pgvector + Drizzle ORM
+- **AI:** Vercel AI SDK v6 + OpenAI (gpt-4o, text-embedding-3-small)
+- **Auth:** NextAuth.js v5
+- **UI:** TailwindCSS v4 + shadcn/ui + BlockNote + Mantine
+
+---
+
+## 2. Kiến trúc & luồng dữ liệu
+
+```
+User → Next.js App Router
+         ├── Server Components (page.tsx) → Server Actions (src/server/actions/)
+         └── Client Components ("use client")
+               ├── BlockEditor → fetch("/api/sync") → PostgreSQL (blocks table)
+               ├── AI autocomplete → fetch("/api/ai/autocomplete")
+               ├── Chat → fetch("/api/chat") → RAG → OpenAI stream
+               └── CommandSearch → semanticSearch() Server Action → pgvector
+```
+
+### Luồng RAG (Retrieval-Augmented Generation)
+```
+Document save → /api/sync (blocks) → [thủ công] /api/ingest
+                                          ↓
+                            chunkBlocks() → generateEmbeddings()
+                                          ↓
+                              document_chunk + chunk_embedding tables
+                                          ↓
+              Chat query → generateEmbedding(query) → pgvector cosine search
+                        → top-5 context chunks → system prompt → OpenAI stream
+```
+
+### Database schema tóm tắt
+```
+users (id, email, plan)
+  └── workspaces (id, ownerId, name, settings)
+        └── documents (id, workspaceId, parentId, title, type, status, metadata)
+              └── blocks (id, documentId, type, content, sortOrder, parentBlockId)
+              └── document_chunk (id, documentId, blockId, content, metadata)
+                    └── chunk_embedding (id, chunkId, embedding vector(1536))
+              
+users ──── ai_conversation (id, userId, workspaceId, contextType)
+              └── ai_message (id, conversationId, role, content, citations, tokenUsage)
+
+documents ←→ document_link (sourceId, targetId, type) [backlinks]
+```
+
+---
+
+## 2. Những điểm mạnh đáng ghi nhận
+
+### ✅ Kiến trúc tốt
+- **Phân tách rõ ràng:** `src/server/actions/` cho server-side logic, `src/lib/` cho utilities tái sử dụng — đúng chuẩn Next.js App Router.
+- **Zod validation nhất quán:** Tất cả server actions và API routes đều dùng Zod để validate input đầu vào.
+- **Custom error classes:** `src/lib/errors.ts` định nghĩa đầy đủ AppError, ValidationError, AuthError... có hệ thống.
+- **Rate limiting với Upstash:** `checkRateLimit()` được áp dụng tại `/api/chat` — bảo vệ chi phí API.
+- **Env validation tại startup:** `src/lib/env.ts` validate toàn bộ biến môi trường bằng Zod và fail-fast nếu thiếu.
+- **Database relations:** Drizzle relations được khai báo đầy đủ trong `schema/index.ts`.
+- **Cascade delete:** Các foreign key đều có `onDelete: "cascade"` phù hợp.
+- **Ingest dùng transaction:** `/api/ingest` xóa chunks cũ và insert mới trong cùng một transaction — đảm bảo tính nhất quán.
+
+### ✅ UX Design
+- Force-directed graph (KnowledgeWeb) tự implement bằng SVG + requestAnimationFrame — không phụ thuộc thêm library.
+- Editor có slash menu với AI items (Soul Write, Soul Refine) — UX tốt, gần với Notion.
+- Debounce auto-save 1 giây trong `BlockEditor` — hạn chế request thừa.
+- Sync status indicator (idle → saving → saved → error) — UX rõ ràng.
+- Floating toolbar trong document view — thiết kế hiện đại.
+
+---
+
+## 3. Các lỗi & vấn đề nghiêm trọng (Bugs)
+
+### 🔴 BUG 1: Ingest KHÔNG tự động chạy sau khi lưu (RAG bị phá vỡ)
+
+**File:** `src/lib/ingest-trigger.ts` và `src/components/editor/BlockEditor.tsx`
+
+`queueDocumentIngest()` chỉ là một hàm **giả** — nó log ra console và return `true`, không thực sự làm gì:
+
+```typescript
+// src/lib/ingest-trigger.ts (dòng 27-31)
+// In production, this should use a job queue (Bull, Inngest, etc)
+// For now, we'll just log and return true
+console.log(`[INGEST] Queued document for ingestion: ${documentId}`)
+return true
+```
+
+`BlockEditor.tsx` sau khi save vào `/api/sync` **không gọi** `/api/ingest`. Kết quả: embeddings **không bao giờ được cập nhật** sau khi người dùng chỉnh sửa tài liệu. RAG hoạt động dựa trên dữ liệu cũ (hoặc trống rỗng nếu chưa ingest lần nào). **Đây là lỗi nghiêm trọng nhất — tính năng cốt lõi không hoạt động đúng.**
+
+**Cách fix đơn giản:** Thêm một `fetch('/api/ingest', ...)` sau mỗi lần sync thành công (có thể debounce riêng, ví dụ 5 giây).
+
+---
+
+### 🔴 BUG 2: `getDocument()` kiểm tra ownership SAU khi đọc dữ liệu
+
+**File:** `src/server/actions/documents.ts` (dòng 87-100)
+
+```typescript
+export async function getDocument(id: string) {
+  const doc = await db.query.documents.findFirst({ ... }) // ← đọc DB trước
+  if (!doc) throw new Error("Document không tồn tại")
+  await checkWorkspaceOwnership(doc.workspaceId)          // ← check auth sau
+  return doc
+}
+```
+
+Thứ tự đúng phải là: xác thực session trước, rồi mới query. Hiện tại, bất kỳ user nào có document ID hợp lệ đều có thể trigger một DB query, sau đó mới bị từ chối. Đây là **IDOR (Insecure Direct Object Reference) nhẹ** — không lộ data thực sự vì cuối cùng vẫn check auth, nhưng lãng phí DB call và là pattern nguy hiểm.
+
+---
+
+### 🔴 BUG 3: `moveDocument()` không kiểm tra circular reference sâu hơn
+
+**File:** `src/server/actions/documents.ts` (dòng 259-293)
+
+Chỉ kiểm tra `newParentId === documentId` (1 cấp). Không kiểm tra trường hợp: nếu `documentId` là tổ tiên của `newParentId`, sẽ tạo ra vòng lặp vô hạn trong tree. Ví dụ: A → B → C, nếu move A vào C → C.parentId = A → A.parentId = C.parentId = A... (cycle).
+
+---
+
+### 🔴 BUG 4: `/api/sync` không đồng bộ blockId với BlockNote
+
+**File:** `src/components/editor/BlockEditor.tsx` (dòng 186-202)
+
+```typescript
+const flatBlocks = editor.document.map((b: any, idx: number) => ({
+  id: b.id,          // BlockNote tự sinh ID (string UUID)
+  type: b.type,
+  content: b.content,
+  parentBlockId: null, // Hard-code null → nested blocks bị phẳng hóa
+  sortOrder: idx,
+}))
+
+await fetch('/api/sync', {
+  body: JSON.stringify({ documentId, upsert: flatBlocks, deletions: [] }) // deletions luôn là []
+})
+```
+
+**Hai vấn đề:**
+1. **`deletions` luôn là `[]`**: Khi user xóa một block trong editor, block đó không bao giờ bị xóa khỏi DB. DB ngày càng tích lũy "block rác".
+2. **`parentBlockId` luôn là `null`**: Nested blocks bị flat hóa, mất cấu trúc phân cấp.
+
+---
+
+### 🔴 BUG 5: `retrieveContext()` — SQL injection vector
+
+**File:** `src/lib/ai/retriever.ts` (dòng 28-45)
+
+```typescript
+const vectorStr = `[${queryEmbedding.join(',')}]`
+// ...
+1 - (ce.embedding <=> ${vectorStr}::vector) as similarity
+```
+
+`vectorStr` được nội suy trực tiếp vào SQL template. Mặc dù `queryEmbedding` là một mảng số từ OpenAI nên thực tế ít rủi ro, nhưng đây là pattern nguy hiểm vì không dùng parameterized query. Nếu format của embedding thay đổi hoặc có bug trong embedder, có thể dẫn đến SQL syntax error hoặc tệ hơn.
+
+---
+
+### 🟡 BUG 6: `scope?.documentIds` trong SQL query bị broken
+
+**File:** `src/lib/ai/retriever.ts` (dòng 42)
+
+```typescript
+${scope?.documentIds ? sql` AND ${documents.id} IN ${scope.documentIds}` : sql``}
+```
+
+`scope.documentIds` là một `string[]`, nhưng Drizzle `sql` template không tự convert array thành SQL list `('a', 'b', 'c')`. Đây sẽ gây lỗi runtime nếu `scope.documentIds` được truyền vào. Feature này hiện không được dùng đến nên chưa bị phát hiện.
+
+---
+
+### 🟡 BUG 7: `KnowledgeWeb` — force simulation chạy mãi mãi, không dừng
+
+**File:** `src/components/dashboard/KnowledgeWeb.tsx` (dòng 53-98)
+
+`requestAnimationFrame` loop chạy liên tục (mỗi ~16ms) và gọi `setNodes()` → re-render toàn bộ component mỗi frame. Không có điều kiện dừng (kiểm tra khi lực hội tụ). Trên workspace có nhiều node, component này sẽ **liên tục re-render và tốn CPU** ngay cả khi graph đã ổn định.
+
+---
+
+### 🟡 BUG 8: `getProductivityStats()` tính từ `updatedAt` của block — không chính xác
+
+**File:** `src/server/actions/documents.ts` (dòng 222-228)
+
+```typescript
+const dayKey = toLocalDayKey(new Date(block.updatedAt))
+dayWords.set(dayKey, (dayWords.get(dayKey) ?? 0) + words)
+```
+
+Đếm **tổng số từ** trong tất cả blocks được cập nhật hôm nay, không phải số từ **viết thêm** hôm nay. Nếu user edit 1 từ trong block 500 chữ → block đó được tính là viết 500 từ hôm nay. Không phản ánh thực tế.
+
+---
+
+### 🟡 BUG 9: `/api/sync` N+1 Query problem
+
+**File:** `src/app/api/sync/route.ts` (dòng 51-92)
+
+Với mỗi block trong `upsert` array, chạy: 1 SELECT (check exist) + 1 UPDATE hoặc INSERT = `2N` database calls trong một transaction. Với document dài 100 blocks → 200 DB calls mỗi lần save. Cần dùng `INSERT ... ON CONFLICT DO UPDATE` (upsert thực sự).
+
+---
+
+### 🟡 BUG 10: `BlockEditor` — stream response từ AI không được parse đúng
+
+**File:** `src/components/editor/BlockEditor.tsx` (dòng 99-113)
+
+```typescript
+const chunk = decoder.decode(value)
+fullText += chunk
+editor.updateBlock(newBlock, {
+  type: "paragraph",
+  content: fullText,  // ← raw text string, không phải InlineContent[]
+})
+```
+
+BlockNote's `content` field cho paragraph là `InlineContent[]`, không phải raw string. Việc truyền raw string vào có thể gây lỗi hoặc không hiển thị đúng, đặc biệt khi response chứa ký tự đặc biệt.
+
+---
+
+## 4. Điểm cần cải thiện (Non-critical)
+
+### 💡 Cải thiện 1: Tự động ingest sau khi lưu
+
+Sau khi `/api/sync` thành công, trigger `/api/ingest` (debounce 5s) để embeddings luôn cập nhật. Hoặc dùng Vercel Background Functions / Inngest.
+
+### 💡 Cải thiện 2: Xây dựng Vector Index cho pgvector
+
+Chưa thấy migration tạo HNSW/IVFFlat index trên `chunk_embedding.embedding`. Không có index → full table scan mỗi query → O(n) performance:
+
+```sql
+CREATE INDEX ON chunk_embedding USING hnsw (embedding vector_cosine_ops);
+```
+
+### 💡 Cải thiện 3: `chunkBlocks()` — token estimation quá thô
+
+```typescript
+const getCharLimit = () => maxTokens * 4  // "4 chars per token"
+```
+
+Dùng tiktoken hoặc ít nhất là heuristic tốt hơn (tiếng Việt thường có tỷ lệ chars/token khác tiếng Anh). Chunks không đồng đều có thể ảnh hưởng chất lượng retrieval.
+
+### 💡 Cải thiện 4: `aiMessages` lưu `tokenUsage` không nhất quán
+
+```typescript
+// User message:
+tokenUsage: { promptTokens: usage.inputTokens, completionTokens: 0 }
+// Assistant message:
+tokenUsage: { promptTokens: 0, completionTokens: usage.outputTokens }
+```
+
+Không thể biết tổng token usage của một conversation. Nên lưu full usage (`promptTokens`, `completionTokens`, `totalTokens`) chỉ trong một record (assistant message).
+
+### 💡 Cải thiện 5: Dashboard page không navigate được từ card
+
+**File:** `src/app/workspace/[workspaceId]/page.tsx` (dòng 70-91)
+
+Card "Bản thảo gần đây" có `cursor-pointer` nhưng không có `onClick` hoặc là `<Link>`. Click vào không làm gì cả. Cần thêm `<Link href={...}>` bọc ngoài card.
+
+### 💡 Cải thiện 6: Button "Chương mới" và "Tìm kiếm bối cảnh" trên dashboard không hoạt động
+
+**File:** `src/app/workspace/[workspaceId]/page.tsx` (dòng 36-49)
+
+Cả hai `<Button>` không có `onClick` handler. Cần kết nối với `createDocument()` và CommandSearch.
+
+### 💡 Cải thiện 7: `semanticSearch()` trả về empty array khi lỗi — khó debug
+
+```typescript
+} catch (error) {
+  console.error("Semantic search error:", error)
+  return []  // Silent failure
+}
+```
+
+Nên phân biệt: lỗi kết nối DB vs. không có kết quả thực sự. Trả về empty array trong cả hai trường hợp khiến UI không thể phân biệt "không tìm thấy" với "lỗi hệ thống".
+
+### 💡 Cải thiện 8: `Sidebar` gọi Server Action từ `useEffect` — anti-pattern
+
+**File:** `src/components/layout/Sidebar.tsx` (dòng 29-35)
+
+Gọi `getRecentDocuments()` (Server Action) trực tiếp từ `useEffect` trong client component. Server Actions được tối ưu cho form submissions/mutations. Nên tạo một API route GET để fetch recent docs, hoặc dùng SWR/React Query.
+
+### 💡 Cải thiện 9: Không có loading skeleton cho document pages
+
+Khi load `/workspace/[id]/documents/[docId]`, không có skeleton UI → người dùng thấy trang trắng trong khi chờ.
+
+### 💡 Cải thiện 10: `workspaces.ts` schema thiếu index
+
+**File:** `src/lib/db/schema/workspaces.ts`
+
+Bảng `workspaces` thiếu index trên `ownerId` — mỗi `listWorkspaces()` và `checkWorkspaceOwnership()` là full table scan. Cần thêm:
+
+```typescript
+ownerIdx: index("workspace_owner_idx").on(table.ownerId)
+```
+
+---
+
+## 5. Vấn đề bảo mật
+
+| Mức độ | Vấn đề | File |
+|---|---|---|
+| 🔴 Cao | SQL string interpolation cho vector query | `lib/ai/retriever.ts:28` |
+| 🟡 Trung bình | `getDocument()` check auth sau query (IDOR pattern) | `server/actions/documents.ts:87` |
+| 🟡 Trung bình | `ingest-trigger.ts` dùng hardcoded URL fallback | `lib/ingest-trigger.ts:43` |
+| 🟢 Thấp | `moveDocument()` chỉ check circular 1 cấp | `server/actions/documents.ts:268` |
+
+---
+
+## 6. Tính năng theo Roadmap — Trạng thái thực tế
+
+| Tính năng (README) | Trạng thái thực tế |
 |---|---|
-| **Team size** | 1-3 developers |
-| **Timeline MVP** | 10 tuần |
-| **Ngân sách cloud** | < $80/tháng |
-| **Target AI cost** | < $0.02/session |
-| **Beta target** | 50 testers, NPS > 40 |
+| Block-based editor (BlockNote) | ✅ Hoàn chỉnh |
+| Auto-save | ✅ Có (debounce 1s), nhưng deletions bị bỏ sót |
+| AI autocomplete (Soul Write/Refine) | ✅ Có endpoint, nhưng response parsing sai format |
+| RAG / Semantic Search | ⚠️ Có infrastructure nhưng ingest không tự động |
+| Command Palette (Cmd+K) | ✅ Có CommandSearch component |
+| Knowledge Graph visualization | ⚠️ Có SVG force-directed nhưng chạy liên tục tốn CPU |
+| Backlinks | ⚠️ Có schema và action nhưng UI chưa tích hợp đầy đủ |
+| Nested documents | ⚠️ Schema có nhưng parentId bị flat trong sync |
+| Document types (character, setting, plot) | ✅ Có schema và routes |
+| Productivity stats | ⚠️ Có nhưng logic đếm từ không chính xác |
+| Real-time multiplayer | ❌ Chưa implement (Roadmap giai đoạn 3) |
+| Mobile PWA | ❌ Chưa implement (Roadmap giai đoạn 4) |
 
 ---
 
-## 2. Kiến Trúc Kỹ Thuật
-
-### 2.1. Tech Stack
-
-```mermaid
-graph TB
-    subgraph Frontend["🖥️ Frontend"]
-        NJ["Next.js 14/15<br/>App Router"]
-        RC["React 18"]
-        TW["Tailwind + shadcn/ui"]
-        BN["BlockNote.js<br/>Editor"]
-    end
-    
-    subgraph Backend["⚙️ Backend"]
-        SA["Server Actions"]
-        RH["Route Handlers"]
-        AI["AI Pipeline<br/>LangChain + OpenRouter"]
-    end
-    
-    subgraph Data["🗄️ Data Layer"]
-        ND["NeonDB<br/>PostgreSQL 16"]
-        PV["pgvector"]
-        DR["Drizzle ORM"]
-        RD["Upstash Redis"]
-    end
-    
-    subgraph Infra["☁️ Infrastructure"]
-        VC["Vercel"]
-        GH["GitHub Actions"]
-        SE["Sentry"]
-    end
-    
-    NJ --> SA
-    NJ --> RH
-    SA --> DR
-    RH --> AI
-    DR --> ND
-    AI --> PV
-    AI --> RD
-    VC --> NJ
-    GH --> VC
-```
-
-### 2.2. Kiến trúc luồng dữ liệu
-
-```
-[Client] Next.js App Router (Server/Client Components)
-    ↓ (Server Actions / API Routes)
-[Next.js Server] Edge Runtime (middleware) + Node.js (AI/DB heavy)
-    ↓ (Drizzle ORM + pg)
-[NeonDB] PostgreSQL + pgvector + RLS policies
-    ↓ (Vector search + AI prompts)
-[AI Layer] LLM API → Prompt Router → RAG Retriever → Streaming Response
-    ↓ (Cache)
-[Upstash Redis] Rate limit, AI response cache, session lock
-```
-
-### 2.3. Cấu trúc thư mục dự kiến
-
-```
-src/
-├─ app/
-│  ├─ (auth)/login, register, callback/
-│  ├─ (workspace)/[workspaceId]/
-│  │  ├─ documents/[docId]/page.tsx    ← Core Editor
-│  │  ├─ chat/page.tsx                  ← AI Brainstorm
-│  │  └─ settings/page.tsx
-│  ├─ api/
-│  │  ├─ chat/route.ts                  ← Streaming AI
-│  │  ├─ sync/route.ts                  ← Block save, conflict resolution
-│  │  └─ ingest/route.ts               ← Chunk & embed pipeline
-│  └─ layout.tsx, page.tsx
-├─ components/
-│  ├─ editor/BlockEditor.tsx            ← BlockNote wrapper
-│  ├─ ai/ChatInterface.tsx
-│  └─ ui/ (shadcn)
-├─ lib/
-│  ├─ db/ (drizzle schema, queries)
-│  ├─ ai/ (rag.ts, prompts.ts, cache.ts)
-│  ├─ auth/ (auth.config.ts, adapter.ts)
-│  └─ utils/
-├─ server/
-│  ├─ actions/ (saveBlocks, createLink, askAI)
-│  └─ middleware/ (auth, rateLimit, cors)
-└─ styles/
-```
-
-> [!NOTE]
-> Dự án sử dụng kiến trúc **Server Components + Client Islands** của Next.js App Router, kết hợp Server Actions cho mutations và Route Handlers cho streaming AI — đây là pattern hiện đại và phù hợp cho ứng dụng này.
-
----
-
-## 3. Hệ Thống Thiết Kế
-
-ScribeSoul có **hai hệ thống thiết kế hoàn chỉnh**, mỗi cái mang một triết lý riêng biệt:
-
-### 3.1. Light Mode — "The Silent Manuscript" (The Digital Curator)
-
-Triết lý: *Trang giấy trống trên bàn gỗ sồi — tối giản, tĩnh lặng, mời gọi sáng tạo.*
-
-| Token | Giá trị | Vai trò |
-|---|---|---|
-| Surface | `#fbf9f4` | Nền "bàn làm việc" |
-| Surface-Container-Low | `#f5f3ee` | Sidebar, navigation |
-| Surface-Container-Lowest | `#ffffff` | Vùng editor chính |
-| Surface-Container-High | `#eae8e3` | Panels phụ |
-| Primary | `#4f4e4e` | Buttons, text chính |
-| Secondary | `#712ae2` → `#8a4cfc` | AI features, CTAs |
-
-**Nguyên tắc cốt lõi:**
-- ❌ **No-Line Rule**: Cấm dùng `1px solid border` để chia section — phải dùng tonal shift
-- ✅ **Glassmorphism**: Menu floating dùng `backdrop-blur(12px)` + opacity 60%
-- ✅ **Serif for creation, Sans-serif for operation**: Font Newsreader cho nội dung viết, Inter cho UI
-
-````carousel
-![Login Screen — Light Mode: Split-screen với form tối giản bên trái và hình ảnh thư viện + trích dẫn Virginia Woolf bên phải](C:\Users\PTCuong\.gemini\antigravity\brain\c209589a-27bb-43ac-8dde-ea7fa9837f3b\artifacts\login_light.png)
-<!-- slide -->
-![Workspace Dashboard — Light Mode: Recent Drafts dạng card, Knowledge Web (biểu đồ mạng nhện), World Building Snippets](C:\Users\PTCuong\.gemini\antigravity\brain\c209589a-27bb-43ac-8dde-ea7fa9837f3b\artifacts\dashboard_light.png)
-<!-- slide -->
-![Document Editor — Light Mode: Layout 3 cột (sidebar, editor Newsreader, Soul Assistant drawer) với inline AI menu và slash menu](C:\Users\PTCuong\.gemini\antigravity\brain\c209589a-27bb-43ac-8dde-ea7fa9837f3b\artifacts\editor_light.png)
-<!-- slide -->
-![AI Chat — Light Mode: Chat với context selector, conflict detection, citation references, và suggestion chips](C:\Users\PTCuong\.gemini\antigravity\brain\c209589a-27bb-43ac-8dde-ea7fa9837f3b\artifacts\chat_light.png)
-````
-
-### 3.2. Dark Mode — "Deep Space Editorial" (The Midnight Archivist)
-
-Triết lý: *Thư viện riêng lúc hoàng hôn — yên tĩnh, uy tín, tập trung sâu. Không gian vũ trụ indigo.*
-
-| Token | Giá trị | Vai trò |
-|---|---|---|
-| Surface | `#0b1326` | Nền "cosmic floor" |
-| Surface-Container-Low | `#131b2e` | Sidebar |
-| Surface-Container | `#171f33` | Card, content container |
-| Surface-Container-Highest | `#2d3449` | Floating modals |
-| Primary Accent | `#d2bbff` | Text nổi bật, links |
-| Primary Container | `#7c3aed` | Brand moments, active states |
-
-**Nguyên tắc cốt lõi:**
-- ❌ Cấm dùng Pure Black (`#000000`) — phải dùng "Deep Space" indigo
-- ❌ Cấm Pure White (`#FFFFFF`) — dùng `#E2E8F0` off-white
-- ✅ Elevation qua luminosity, không dùng drop shadow
-- ✅ **"Frosted Obsidian"** glassmorphism cho floating nav
-- ✅ **"Archivist Scroll"**: Thanh progress dọc margin bằng `1px primary` line
-
-````carousel
-![Login Screen — Dark Mode: "Welcome, Archivist." với gradient violet CTA, thư viện vũ trụ phía bên phải](C:\Users\PTCuong\.gemini\antigravity\brain\c209589a-27bb-43ac-8dde-ea7fa9837f3b\artifacts\login_dark.png)
-<!-- slide -->
-![Dashboard — Dark Mode: Knowledge Web "The Obsidian Nexus", Productivity Pulse, Summon Muse, Recent Manuscripts với cover images](C:\Users\PTCuong\.gemini\antigravity\brain\c209589a-27bb-43ac-8dde-ea7fa9837f3b\artifacts\dashboard_dark.png)
-<!-- slide -->
-![Editor — Dark Mode: Soul Assistant với Character Motive Analysis, Plot Point suggestions, Visual Reference panel](C:\Users\PTCuong\.gemini\antigravity\brain\c209589a-27bb-43ac-8dde-ea7fa9837f3b\artifacts\editor_dark.png)
-<!-- slide -->
-![AI Chat — Dark Mode: "Good evening, Archivist." — Analyze Prose Style, Character Forge, Chronicles sidebar, Neural Load indicator](C:\Users\PTCuong\.gemini\antigravity\brain\c209589a-27bb-43ac-8dde-ea7fa9837f3b\artifacts\chat_dark.png)
-````
-
-### 3.3. So sánh hai hệ thống thiết kế
-
-| Tiêu chí | Light "Silent Manuscript" | Dark "Deep Space" |
-|---|---|---|
-| **Cảm xúc** | Ấm áp, tĩnh lặng, cổ điển | Huyền bí, vũ trụ, futuristic |
-| **Đối tượng** | Nhà văn truyền thống, non-fiction | Sci-fi/Fantasy writers, Gen Z |
-| **Font chủ đạo** | Newsreader (Serif) | Newsreader (Serif) |
-| **AI persona** | "Soul Assistant" | "Celestial Intelligence" / "ScribeSoul" |
-| **Signature element** | Warm Paper tones | Violet Glow + Frosted Obsidian |
-| **Strengths** | Dễ đọc lâu, chuyên nghiệp | Immersive, wow-factor cao |
-
----
-
-## 4. Database Schema
-
-### 4.1. Entity Relationship Diagram
-
-```mermaid
-erDiagram
-    USERS ||--o{ ACCOUNTS : "has"
-    USERS ||--o{ SESSIONS : "has"
-    USERS ||--o{ WORKSPACES : "owns"
-    USERS ||--o{ AI_CONVERSATIONS : "creates"
-    
-    WORKSPACES ||--o{ DOCUMENTS : "contains"
-    
-    DOCUMENTS ||--o{ DOCUMENTS : "parent_of"
-    DOCUMENTS ||--o{ BLOCKS : "contains"
-    DOCUMENTS ||--o{ DOCUMENT_LINKS : "source"
-    DOCUMENTS ||--o{ DOCUMENT_LINKS : "target"
-    DOCUMENTS ||--o{ DOCUMENT_CHUNKS : "chunked_into"
-    
-    BLOCKS ||--o{ BLOCKS : "nested_in"
-    BLOCKS ||--o{ DOCUMENT_CHUNKS : "generates"
-    
-    DOCUMENT_CHUNKS ||--|| CHUNK_EMBEDDINGS : "embedded_as"
-    
-    AI_CONVERSATIONS ||--o{ AI_MESSAGES : "contains"
-    
-    USERS {
-        uuid id PK
-        varchar email UK
-        varchar name
-        text avatar_url
-        varchar plan
-    }
-    
-    WORKSPACES {
-        uuid id PK
-        uuid owner_id FK
-        varchar name
-        jsonb settings
-    }
-    
-    DOCUMENTS {
-        uuid id PK
-        uuid workspace_id FK
-        uuid parent_id FK
-        varchar title
-        varchar type
-        varchar status
-        jsonb metadata
-    }
-    
-    BLOCKS {
-        uuid id PK
-        uuid document_id FK
-        varchar type
-        jsonb content
-        int sort_order
-    }
-    
-    DOCUMENT_LINKS {
-        uuid id PK
-        uuid source_id FK
-        uuid target_id FK
-        varchar type
-    }
-    
-    DOCUMENT_CHUNKS {
-        uuid id PK
-        uuid document_id FK
-        uuid block_id FK
-        text content
-        jsonb metadata
-        int token_count
-    }
-    
-    CHUNK_EMBEDDINGS {
-        uuid id PK
-        uuid chunk_id FK
-        vector_1536 embedding
-    }
-    
-    AI_MESSAGES {
-        uuid id PK
-        uuid conversation_id FK
-        varchar role
-        text content
-        jsonb citations
-        jsonb token_usage
-    }
-```
-
-### 4.2. Các bảng chính (6 nhóm)
-
-| Nhóm | Bảng | Mục đích |
-|---|---|---|
-| **Auth** | `users`, `accounts`, `sessions` | Auth.js v5 + DrizzleAdapter, OAuth + Magic Link |
-| **Workspace** | `workspaces`, `documents` | Tổ chức nội dung theo workspace, cây thư mục |
-| **Content** | `blocks` | Block-based content (JSONB), Notion-like |
-| **Linking** | `document_links` | Bi-directional links (`[[...]]`), 4 loại link |
-| **AI/Vector** | `document_chunks`, `chunk_embeddings` | RAG pipeline, pgvector 1536 chiều, HNSW index |
-| **Conversations** | `ai_conversations`, `ai_messages` | Chat history, citations, token tracking |
-
-### 4.3. Quyết định thiết kế đáng chú ý
-
-- **UUID v7** cho PKs — tối ưu index + phân tán
-- **JSONB** cho block content — linh hoạt với BlockNote JSON structure
-- **RLS trên mọi bảng** — security at database level, không phụ thuộc application logic
-- **HNSW Index** cho vector search — nhanh hơn IVFFlat cho dataset nhỏ-vừa (phù hợp MVP)
-- **CASCADE deletes** — tự động dọn dẹp, tránh orphan data
-
-> [!TIP]
-> Schema được thiết kế khá tốt cho MVP. Tuy nhiên, bảng `blocks` lưu từng block riêng lẻ có thể gây nhiều query. Nếu performance là concern, cân nhắc lưu toàn bộ document content dưới dạng 1 JSONB column trong `documents` và chỉ tách blocks khi cần sync conflict resolution.
-
----
-
-## 5. AI Pipeline (RAG)
-
-### 5.1. Luồng xử lý
-
-```mermaid
-flowchart LR
-    A["📝 User saves<br/>block/document"] --> B["🔪 Chunking<br/>max 600 tokens<br/>overlap 100"]
-    B --> C["🧮 Embedding<br/>text-embedding-3-small"]
-    C --> D["💾 Store<br/>pgvector"]
-    
-    E["💬 User asks<br/>AI question"] --> F["🔍 Hybrid Search<br/>vector + metadata filter<br/>Top-K=5"]
-    D --> F
-    F --> G["📋 Prompt Assembly<br/>system + retrieved chunks"]
-    G --> H["🌊 streamText<br/>AI SDK"]
-    H --> I["📌 Citation Parsing<br/>[[citation_id]]"]
-    I --> J["✨ Highlight<br/>in editor"]
-    
-    style A fill:#7c3aed,color:#fff
-    style E fill:#7c3aed,color:#fff
-    style J fill:#7c3aed,color:#fff
-```
-
-### 5.2. Các tính năng AI chính
-
-| Tính năng | Mô tả | Độ phức tạp |
-|---|---|---|
-| **Inline AI Generator** | Bôi đen text → Menu AI → Stream kết quả trực tiếp | Trung bình |
-| **Background Extraction** | Tự động nhận diện thực thể (Nhân vật, Địa điểm) → tạo link nét đứt | Cao |
-| **Character Roleplay** | Chat với AI trong vai nhân vật dựa trên dữ liệu đã viết | Cao |
-| **Plot Checker** | Phát hiện mâu thuẫn timeline, logic trong cốt truyện | Rất cao |
-| **Conflict Detection** | So sánh cross-reference giữa các chương để phát hiện inconsistency | Rất cao |
-| **Prose Style Analysis** | Phân tích phong cách văn, nhịp điệu, tone | Trung bình |
-
-### 5.3. Chiến lược Fallback & Chi phí
-
-- **Model chính**: GPT-4o / Claude via OpenRouter
-- **Fallback**: Nếu API timeout → chuyển model nhỏ hơn hoặc cached response
-- **Cache**: Upstash Redis cho AI responses đã dùng
-- **Target**: < $0.015/session → cần chunking chặt chẽ và context window management
-
----
-
-## 6. Lộ Trình Phát Triển (10 Tuần)
-
-```mermaid
-gantt
-    title ScribeSoul MVP — 10-Week Roadmap
-    dateFormat  YYYY-MM-DD
-    
-    section Phase 1: Foundation
-    Next.js Setup, Auth, NeonDB        :a1, 2026-04-21, 7d
-    BlockNote.js, Layout/Theme          :a2, 2026-04-28, 7d
-    
-    section Phase 2: Data Layer
-    Schema DB, Server Actions CRUD      :b1, 2026-05-05, 7d
-    [[ ]] Parser, Backlink UI, Export   :b2, 2026-05-12, 7d
-    
-    section Phase 3: AI Pipeline
-    Chunking, pgvector, LLM Integration :c1, 2026-05-19, 7d
-    Chat UI, RAG, Citations             :c2, 2026-05-26, 7d
-    
-    section Phase 4: AI Agent
-    Character Roleplay, Plot Checker    :d1, 2026-06-02, 7d
-    Loading/Streaming, Error Fallback   :d2, 2026-06-09, 7d
-    
-    section Phase 5: Beta
-    Vercel + Neon Production            :e1, 2026-06-16, 7d
-    Analytics, Stripe, Onboarding       :e2, 2026-06-23, 7d
-```
-
-### Tiêu chí hoàn thành theo phase
-
-| Phase | Tuần | Deliverable chính | Acceptance Criteria |
-|---|---|---|---|
-| **Foundation** | 1-2 | Setup Next.js, Auth, Editor | Đăng nhập được, tạo workspace, editor render JSON |
-| **Data Layer** | 3-4 | CRUD, Linking, Export | Link hai chiều hoạt động, export/import `.md` chuẩn |
-| **AI Pipeline** | 5-6 | RAG, Chat UI | AI trả lời đúng ngữ cảnh, citation, latency < 3s |
-| **AI Agent** | 7-8 | Roleplay, Plot Check | Chat nhân vật ổn định, retention D7 > 25%, 0 critical bugs |
-| **Beta** | 9-10 | Production deploy | 50 beta testers, AI cost < $0.02/session, NPS > 40 |
-
----
-
-## 7. Đánh Giá Rủi Ro
-
-| Rủi ro | Xác suất | Tác động | Giải pháp |
-|---|---|---|---|
-| 🔴 **AI hallucination** | Cao | Trung bình | Strict RAG, citation bắt buộc, chế độ "Human Review" |
-| 🟡 **Chi phí token bùng nổ** | Trung bình | Cao | Cache Redis, model rẻ cho draft, giới hạn context |
-| 🟢 **Data sync conflict** | Thấp | Cao | Optimistic UI + queue retry, lock version khi AI edit |
-| 🔴 **Scope creep** | Cao | Cao | Strict PRD, kill tính năng không dùng sau 2 tuần beta |
-
----
-
-## 8. Phân Tích SWOT
-
-### Strengths (Điểm mạnh)
-- 🎯 **Niche rõ ràng**: Tập trung vào creative writers — thị trường chưa bão hòa
-- 🎨 **Design system premium**: Hai theme hoàn chỉnh với triết lý sâu sắc, không phải "generic SaaS"
-- 🏗️ **Tech stack hiện đại**: Next.js App Router + Server Actions + pgvector — cutting-edge nhưng stable
-- 🔐 **Security-first**: RLS database level, không chỉ application level
-- 📋 **Documentation tốt**: PRD, Tech Spec, DB Schema đều có sẵn trước khi code
-
-### Weaknesses (Điểm yếu)
-- ⚠️ **Team size nhỏ (1-3 dev)** cho scope khá lớn
-- ⚠️ **10 tuần aggressive** cho MVP với AI pipeline phức tạp
-- ⚠️ **Chưa có source code** — dự án đang ở giai đoạn documentation/design
-- ⚠️ **Phụ thuộc nhiều dịch vụ bên thứ ba**: OpenRouter, Neon, Vercel, Upstash
-
-### Opportunities (Cơ hội)
-- 📈 **Thị trường AI writing tools** đang tăng mạnh nhưng ít sản phẩm chuyên cho fiction/creative writing
-- 🌍 **Mô hình RAG cho creative writing** là unique selling proposition mạnh
-- 💰 **SaaS model**: Free → Pro → Team tạo revenue path rõ ràng
-
-### Threats (Nguy cơ)
-- ⚡ **Notion AI, Google Docs AI** có thể thêm features tương tự
-- 💸 **Chi phí AI API** không ổn định, có thể tăng
-- 🧩 **Complexity của real-time collaboration** nếu scale lên team plan
-
----
-
-## 9. Đề Xuất Cải Tiến
-
-### 9.1. Ưu tiên cao (nên làm trước khi code)
-
-> [!WARNING]
-> **Chưa có source code nào được viết.** Dự án hiện chỉ có documentation (.doc) và design mockups (.design). Cần khởi tạo codebase ngay.
-
-1. **Khởi tạo Next.js project** với đầy đủ config (ESLint, TypeScript strict, Tailwind, shadcn/ui)
-2. **Setup Drizzle schema** từ SQL specification đã có
-3. **Implement design tokens** dưới dạng CSS custom properties — cả Light lẫn Dark mode
-4. **Auth flow** với Auth.js v5 + DrizzleAdapter
-
-### 9.2. Ưu tiên trung bình (Phase 2-3)
-
-5. **Document state management**: Cân nhắc lưu full document JSONB trong `documents` table thay vì tách từng block — giảm round-trips
-6. **Offline-first**: Thêm Service Worker + IndexedDB để editor hoạt động offline, sync sau
-7. **AI Prompt versioning**: Lưu prompt templates trong DB hoặc file, dễ iterate
-
-### 9.3. Ưu tiên thấp (Post-MVP)
-
-8. **Real-time collaboration**: WebSocket / Supabase Realtime (đã note trong spec)
-9. **Mobile responsive**: Mockup hiện tại chỉ có desktop
-10. **Multi-language AI**: Hỗ trợ viết bằng nhiều ngôn ngữ
-
----
-
-## 10. Tổng Kết
-
-| Khía cạnh | Đánh giá | Ghi chú |
-|---|---|---|
-| **Ý tưởng sản phẩm** | ⭐⭐⭐⭐⭐ | Niche rõ, USP mạnh, giải quyết pain point thực |
-| **Documentation** | ⭐⭐⭐⭐ | 3 docs + PRD đủ chi tiết, cần thêm API spec |
-| **Design System** | ⭐⭐⭐⭐⭐ | Hai theme premium, triết lý sâu, mockup đẹp |
-| **Tech Architecture** | ⭐⭐⭐⭐ | Modern stack, hợp lý, cần validate performance |
-| **Database Design** | ⭐⭐⭐⭐ | Solid schema, RLS tốt, cần stress test vector search |
-| **AI Pipeline** | ⭐⭐⭐⭐ | RAG design rõ ràng, cần prototype sớm để validate accuracy |
-| **Feasibility (10 tuần)** | ⭐⭐⭐ | Aggressive nhưng khả thi nếu strict scope + 2-3 developers |
-| **Code Implementation** | ⭐ | **Chưa có source code — cần bắt đầu ngay** |
-
-> [!IMPORTANT]
-> **Kết luận**: ScribeSoul là một dự án có tầm nhìn xuất sắc và documentation/design chuẩn bị kỹ lưỡng. Điểm yếu duy nhất là **chưa có code nào được viết**. Bước tiếp theo hợp lý nhất là **khởi tạo Next.js project và bắt đầu Phase 1 (Foundation & UI Core)** ngay lập tức.
+## 7. Tóm tắt ưu tiên sửa lỗi
+
+### Ưu tiên cao (ảnh hưởng tính năng cốt lõi)
+1. **BUG 1** — Trigger ingest sau khi save block
+2. **BUG 4** — Fix deletions trong `/api/sync` + restore nested block support
+3. **BUG 5** — Dùng parameterized query cho pgvector
+4. **Cải thiện 2** — Tạo pgvector HNSW index
+5. **Cải thiện 5 & 6** — Fix các button/card không có handler trên dashboard
+
+### Ưu tiên trung bình
+6. **BUG 9** — Thay N+1 upsert bằng bulk upsert
+7. **BUG 7** — Dừng force simulation khi graph ổn định
+8. **BUG 2** — Check auth trước khi query DB
+9. **BUG 3** — Deep circular reference detection cho moveDocument
+10. **BUG 10** — Streaming response phải convert sang InlineContent[]
+
+### Ưu tiên thấp (cải thiện chất lượng)
+11. **BUG 8** — Cải thiện logic đếm từ productivity
+12. **Cải thiện 3** — Token estimation tốt hơn cho chunker
+13. **Cải thiện 10** — Index `workspaces.ownerId`
+14. **Cải thiện 4** — Normalize tokenUsage trong aiMessages
+15. **Cải thiện 8** — Refactor sidebar data fetching

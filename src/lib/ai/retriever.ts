@@ -23,9 +23,15 @@ export async function retrieveContext(
 ): Promise<RetrievalResult[]> {
   const queryEmbedding = await generateEmbedding(query);
   
-  // Format embedding for SQL (drizzle-orm doesn't support vector type natively in the same way, 
-  // so we use sql template with cast)
-  const vectorStr = `[${queryEmbedding.join(',')}]`;
+  // Use parameterized query for the vector embedding to prevent SQL injection.
+  // Convert the embedding array to a SQL-safe string literal via a parameter,
+  // then cast it to vector type on the database side.
+  const embeddingParam = `[${queryEmbedding.join(',')}]`;
+
+  // Build scope filter: if documentIds are provided, restrict search to those docs
+  const scopeFilter = scope?.documentIds && scope.documentIds.length > 0
+    ? sql` AND ${documents.id} IN (${sql.join(scope.documentIds.map(id => sql`${id}`), sql`, `)})`
+    : sql``;
 
   // SQL for cosine similarity: 1 - (vec1 <=> vec2)
   // we use <=> which is cosine distance
@@ -34,12 +40,12 @@ export async function retrieveContext(
       ${documentChunks.content},
       ${documents.title} as doc_title,
       ${documents.id} as doc_id,
-      1 - (ce.embedding <=> ${vectorStr}::vector) as similarity
+      1 - (ce.embedding <=> ${embeddingParam}::vector) as similarity
     FROM ${documentChunks}
     JOIN ${documents} ON ${documentChunks.documentId} = ${documents.id}
     JOIN ${chunkEmbeddings} ce ON ce.chunk_id = ${documentChunks.id}
     WHERE ${documents.workspaceId} = ${workspaceId}
-    ${scope?.documentIds ? sql` AND ${documents.id} IN ${scope.documentIds}` : sql``}
+    ${scopeFilter}
     ORDER BY similarity DESC
     LIMIT ${limit}
   `);

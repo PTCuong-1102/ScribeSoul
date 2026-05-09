@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
-import { getRecentDocuments, createDocument } from "@/server/actions/documents"
+import { createDocument } from "@/server/actions/documents"
 import { 
   BookOpen, 
   Users, 
@@ -26,13 +26,35 @@ export function Sidebar() {
   const [recentDocs, setRecentDocs] = useState<{id: string, title: string}[]>([])
   const [isCreating, setIsCreating] = useState(false)
 
+  // Fetch recent docs when workspaceId or pathname changes.
+  // Uses AbortController for proper cleanup on unmount/re-render.
   useEffect(() => {
-    if (workspaceId) {
-      getRecentDocuments(workspaceId, 5)
-        .then((docs) => setRecentDocs(docs))
-        .catch(console.error)
+    if (!workspaceId) return
+
+    const controller = new AbortController()
+
+    async function loadRecentDocs() {
+      try {
+        const res = await fetch(`/api/workspace/${workspaceId}/recent-docs`, {
+          signal: controller.signal,
+        })
+        if (res.ok) {
+          const docs = await res.json()
+          if (!controller.signal.aborted) {
+            setRecentDocs(docs)
+          }
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error('Failed to fetch recent docs:', error)
+        }
+      }
     }
-  }, [workspaceId])
+
+    loadRecentDocs()
+
+    return () => controller.abort()
+  }, [workspaceId, pathname])
 
   const handleCreateNew = async () => {
     if (!workspaceId || isCreating) return

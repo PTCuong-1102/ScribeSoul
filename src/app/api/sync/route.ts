@@ -37,60 +37,60 @@ export async function POST(req: Request) {
       return new NextResponse("Forbidden", { status: 403 })
     }
 
-    // Process deletions
-    if (validated.deletions.length > 0) {
-      await db.delete(blocks)
-        .where(and(
-          eq(blocks.documentId, validated.documentId),
-          inArray(blocks.id, validated.deletions)
-        ))
-    }
+    await db.transaction(async (tx) => {
+      // Process deletions
+      if (validated.deletions.length > 0) {
+        await tx.delete(blocks)
+          .where(and(
+            eq(blocks.documentId, validated.documentId),
+            inArray(blocks.id, validated.deletions)
+          ))
+      }
 
-    // Process upserts with transaction
-    if (validated.upsert.length > 0) {
-      await db.transaction(async (tx) => {
-        for (const item of validated.upsert) {
-          if (item.id) {
-            // Check if block exists
-            const existing = await tx.query.blocks.findFirst({
-              where: eq(blocks.id, item.id),
-            })
+      // Process upserts using a bulk strategy:
+      // 1. Separate items with IDs (potential updates) from new items
+      // 2. For items with IDs, delete all existing and re-insert in bulk
+      //    This avoids N+1 SELECT+UPDATE pattern and handles both insert/update cases
+      if (validated.upsert.length > 0) {
+        const itemsWithId = validated.upsert.filter(item => item.id)
+        const itemsWithoutId = validated.upsert.filter(item => !item.id)
 
-            if (existing) {
-              // Update existing block
-              await tx.update(blocks)
-                .set({
-                  content: item.content,
-                  sortOrder: item.sortOrder,
-                  type: item.type,
-                  parentBlockId: item.parentBlockId,
-                  updatedAt: new Date()
-                })
-                .where(eq(blocks.id, item.id))
-            } else {
-              // Insert new block with specific ID
-              await tx.insert(blocks).values({
-                id: item.id,
-                documentId: validated.documentId,
-                type: item.type,
-                content: item.content,
-                sortOrder: item.sortOrder,
-                parentBlockId: item.parentBlockId,
-              })
-            }
-          } else {
-            // Insert new block (ID auto-generated)
-            await tx.insert(blocks).values({
-              documentId: validated.documentId,
-              type: item.type,
-              content: item.content,
-              sortOrder: item.sortOrder,
-              parentBlockId: item.parentBlockId,
-            })
-          }
+        // Delete existing blocks for this document that match incoming IDs,
+        // then re-insert them with updated data
+        if (itemsWithId.length > 0) {
+          const existingIds = itemsWithId.map(item => item.id as string)
+          await tx.delete(blocks)
+            .where(and(
+              eq(blocks.documentId, validated.documentId),
+              inArray(blocks.id, existingIds)
+            ))
         }
-      })
-    }
+
+        // Bulk insert all items (both with and without explicit IDs)
+        const allValues = [
+          ...itemsWithId.map(item => ({
+            id: item.id,
+            documentId: validated.documentId,
+            type: item.type,
+            content: item.content,
+            sortOrder: item.sortOrder,
+            parentBlockId: item.parentBlockId,
+            updatedAt: new Date(),
+          })),
+          ...itemsWithoutId.map(item => ({
+            documentId: validated.documentId,
+            type: item.type,
+            content: item.content,
+            sortOrder: item.sortOrder,
+            parentBlockId: item.parentBlockId,
+          })),
+        ]
+
+        if (allValues.length > 0) {
+          await tx.insert(blocks).values(allValues)
+        }
+      }
+    })
 
     // Update document updatedAt timestamp
     await db.update(documents)
