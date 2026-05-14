@@ -1,5 +1,5 @@
 import { createNeonAuth } from '@neondatabase/auth/next/server'
-import { NextResponse, NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
 type NeonAuth = ReturnType<typeof createNeonAuth>
 
@@ -61,11 +61,7 @@ function createDisabledAuth(): NeonAuth {
       GET: async () => disabledResponse.clone(),
       POST: async () => disabledResponse.clone(),
     }),
-    middleware: () => (_request: NextRequest) => {
-      // In dev mode with disabled auth, allow all requests through without validation
-      // The app pages will get the mock session from auth.getSession()
-      return NextResponse.next()
-    },
+    middleware: () => async () => NextResponse.next(),
   // Cast through `unknown` because this dev-mode mock intentionally only implements
   // the subset of NeonAuth methods used by the application (getSession, signIn, signUp, signOut).
   // Methods like resetPassword, verifyEmail, etc. are not needed in local development.
@@ -124,5 +120,3 @@ export const auth: NeonAuth = new Proxy({} as NeonAuth, {
     return getAuth()[prop as keyof NeonAuth]
   },
 })
-
-
