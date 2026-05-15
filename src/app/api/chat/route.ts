@@ -3,10 +3,12 @@ import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { aiMessages } from "@/lib/db/schema/ai";
+import { aiMessages, aiConversations } from "@/lib/db/schema/ai";
+import { workspaces } from "@/lib/db/schema/workspaces";
 import { retrieveContext } from "@/lib/ai/retriever";
 import { AI_CONFIG } from "@/lib/ai/config";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { eq, and } from "drizzle-orm";
 
 export const maxDuration = 30;
 
@@ -17,6 +19,21 @@ export async function POST(req: Request) {
 
     const { messages, workspaceId, conversationId } = await req.json();
     const lastMessage = messages[messages.length - 1].content;
+
+    // FIX 1: Verify workspace ownership before processing
+    const workspace = await db.query.workspaces.findFirst({
+      where: and(
+        eq(workspaces.id, workspaceId),
+        eq(workspaces.ownerId, session.user.id)
+      ),
+    });
+
+    if (!workspace) {
+      return new Response(
+        JSON.stringify({ error: "Workspace not found or unauthorized" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const rateLimitKey = `chat:${session.user.id}:${workspaceId}`;
     const rateLimitResult = await checkRateLimit(rateLimitKey, 20, "1 h");
@@ -37,6 +54,24 @@ export async function POST(req: Request) {
           },
         }
       );
+    }
+
+    // FIX 2: Verify conversationId ownership if provided
+    if (conversationId) {
+      const conversation = await db.query.aiConversations.findFirst({
+        where: and(
+          eq(aiConversations.id, conversationId),
+          eq(aiConversations.userId, session.user.id),
+          eq(aiConversations.workspaceId, workspaceId)
+        ),
+      });
+
+      if (!conversation) {
+        return new Response(
+          JSON.stringify({ error: "Conversation not found or unauthorized" }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // 1. Retrieve Context (RAG)

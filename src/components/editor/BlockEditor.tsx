@@ -95,11 +95,17 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
     if (ingestTimeoutRef.current) clearTimeout(ingestTimeoutRef.current)
     ingestTimeoutRef.current = setTimeout(async () => {
       try {
-        await fetch('/api/ingest', {
+        const response = await fetch('/api/ingest', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ documentId: docId })
         })
+        
+        // FIX 3: Check response status and log errors
+        if (!response.ok) {
+          console.error(`[INGEST_ERROR] Server returned ${response.status}: ${response.statusText}`)
+          return
+        }
       } catch (error) {
         console.error("[INGEST_TRIGGER]", error)
       }
@@ -247,11 +253,16 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
                     upsert: currentBlocks,
                     deletions
                   })
+                }).then(response => {
+                  // FIX 3: Check response status before marking saved
+                  if (!response.ok) {
+                    console.error(`[SYNC_ERROR] Server returned ${response.status}: ${response.statusText}`)
+                    onSyncStateChange("error")
+                    return
+                  }
+                  onSyncStateChange("saved")
+                  triggerIngest(documentId)
                 })
-                onSyncStateChange("saved")
-
-                // Trigger ingest after successful sync (debounced 5s)
-                triggerIngest(documentId)
               } catch {
                 onSyncStateChange("error")
               }

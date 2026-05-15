@@ -1,0 +1,92 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    🔗 GIT HOOKS QUICK START GUIDE                           ║
+║                            ScribeSoul Project                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+🎯 SETUP (first time only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  npm install
+  → Husky automatically installs hooks
+
+✅ VERIFY STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ./scripts/manage-hooks.sh status
+
+💡 DAILY WORKFLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  1. Edit code
+  2. git add <files>
+  3. git commit -m "message"
+     ↳ 🔍 Pre-commit hook runs:
+        - ESLint check (auto-fix if possible)
+        - TypeScript check
+     ✨ If pass → commit created
+     ❌ If fail → commit rejected, fix & retry
+
+  4. git push origin <branch>
+     ↳ 🔍 Pre-push hook runs:
+        - TypeScript check
+        - ESLint full check  
+        - Full production build
+     ✨ If pass → push succeeds
+     ❌ If fail → push rejected, fix locally & retry
+
+⚡ QUICK COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  npm run lint              # ESLint all files
+  npx tsc --noEmit          # Type check
+  npm run build             # Full build
+  npx eslint --fix src      # Auto-fix linting errors
+
+🚫 EMERGENCY BYPASS (use sparingly)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  git commit --no-verify -m "message"  # Skip pre-commit
+  git push --no-verify                 # Skip pre-push
+
+📋 WHAT EACH HOOK DOES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PRE-COMMIT (.husky/pre-commit)
+  • ESLint on changed files (auto-fix)
+  • TypeScript type check (non-blocking)
+  • Duration: ~3-5 seconds
+  • Blocks commit if ESLint fails
+
+  PRE-PUSH (.husky/pre-push)
+  • Full TypeScript check
+  • Full ESLint check
+  • Production build
+  • Duration: ~30-60 seconds
+  • Blocks push if ANY check fails
+
+🔧 MANAGEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ./scripts/manage-hooks.sh enable     # Enable hooks
+  ./scripts/manage-hooks.sh disable    # Disable hooks
+  ./scripts/manage-hooks.sh status     # Check status
+  ./scripts/manage-hooks.sh reinstall  # Reinstall from scratch
+
+📚 MORE INFO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Full guide: .github/COMMIT_GUIDE.md
+  Summary:   HOOK_SETUP_SUMMARY.md
+  Checklist: .github/HOOKS_CHECKLIST.md
+  
+🐛 TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Hooks not running?
+  → npm run prepare
+  → ./scripts/manage-hooks.sh reinstall
+
+  ESLint errors?
+  → npx eslint --fix src
+  → git add .
+  → git commit --amend -m "same message"
+
+  Build fails?
+  → npm run build
+  → Fix errors locally
+  → git add .
+  → git commit --amend -m "same message"
+
+═════════════════════════════════════════════════════════════════════════════════
+✨ Happy coding! Hooks ensure quality commits and builds.

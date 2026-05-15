@@ -10,14 +10,30 @@ import { getDocumentTree, getProductivityStats } from "@/server/actions/document
 
 export default async function DashboardPage({ params }: { params: Promise<{ workspaceId: string }> }) {
   const { workspaceId } = await params;
-  const documents = await getDocumentTree(workspaceId).catch(() => []);
-  const productivityStats = await getProductivityStats(workspaceId).catch(() => ({
+  
+  // FIX 4: Handle errors explicitly instead of silent failure
+  let documents: Awaited<ReturnType<typeof getDocumentTree>> = []
+  try {
+    documents = await getDocumentTree(workspaceId)
+  } catch (error) {
+    console.error("Failed to load document tree:", error)
+    // Still render page but with empty state, errors logged for monitoring
+  }
+
+  let productivityStats = {
     wordsToday: 0,
     streak: 0,
     wordsDelta: 0,
     percentOfGoal: 0,
     dailyGoal: 2000,
-  }));
+  }
+  try {
+    productivityStats = await getProductivityStats(workspaceId)
+  } catch (error) {
+    console.error("Failed to load productivity stats:", error)
+    // Use fallback defaults, errors logged for monitoring
+  }
+
   const recentDrafts = documents.slice(0, 3); // Get latest 3 drafts
 
   return (

@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# Pre-push hook for ScribeSoul
+# Runs full build and type-check before pushing
+# Exit with non-zero status to prevent push if validation fails
+
+set -e
+
+echo ""
+echo "🚀 Running pre-push checks before deploying..."
+echo ""
+
+# 1. TypeScript type check
+echo "📦 Checking TypeScript types..."
+if npx tsc --noEmit; then
+  echo "✅ TypeScript check passed"
+else
+  echo "❌ TypeScript check failed"
+  exit 1
+fi
+
+# 2. ESLint check (all files)
+echo ""
+echo "📝 Running ESLint on all files..."
+if npm run lint; then
+  echo "✅ ESLint passed"
+else
+  echo "❌ ESLint failed - please fix linting errors"
+  exit 1
+fi
+
+# 3. Full build check
+echo ""
+echo "🔨 Building project (this may take a moment)..."
+if npm run build; then
+  echo "✅ Build passed"
+else
+  echo "❌ Build failed - please fix build errors"
+  exit 1
+fi
+
+echo ""
+echo "✨ All pre-push checks passed! Ready to deploy."
+echo ""

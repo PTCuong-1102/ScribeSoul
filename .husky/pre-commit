@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# Pre-commit hook for ScribeSoul
+# Runs linting and optional build check on staged files
+# Exit with non-zero status to prevent commit if validation fails
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. Run ESLint on staged files
+echo "📝 Running ESLint on staged files..."
+if npx lint-staged; then
+  echo "✅ ESLint passed"
+else
+  echo "❌ ESLint failed"
+  exit 1
+fi
+
+# 2. TypeScript type check (optional but recommended)
+echo "📦 Running TypeScript type check..."
+if npx tsc --noEmit; then
+  echo "✅ TypeScript check passed"
+else
+  echo "⚠️  TypeScript check failed (non-blocking for now)"
+fi
+
+# 3. Build check (only if explicitly needed - can be slow)
+# Uncomment to enable full build check on every commit
+# echo "🔨 Building project..."
+# if npm run build; then
+#   echo "✅ Build passed"
+# else
+#   echo "❌ Build failed"
+#   exit 1
+# fi
+
+echo ""
+echo "✨ Pre-commit checks passed! Ready to commit."
+echo ""
