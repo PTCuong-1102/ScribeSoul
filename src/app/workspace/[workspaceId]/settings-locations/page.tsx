@@ -1,12 +1,29 @@
 import React from 'react'
+import { redirect } from 'next/navigation'
 import { getDocumentsByType } from '@/server/actions/documents'
 import { CreateDocumentButton } from '@/components/workspace/CreateDocumentButton'
 import Link from 'next/link'
 import { MapPin, FileText } from 'lucide-react'
+import { auth } from '@/lib/auth/server'
 
 export default async function SettingsLocationsPage({ params }: { params: Promise<{ workspaceId: string }> }) {
+  // Verify session before rendering
+  const { data: session } = await auth.getSession()
+  if (!session?.user?.id) {
+    redirect('/login')
+  }
+
   const { workspaceId } = await params
-  const docs = await getDocumentsByType(workspaceId, "setting")
+  
+  let docs: Awaited<ReturnType<typeof getDocumentsByType>> = []
+  try {
+    docs = await getDocumentsByType(workspaceId, "setting")
+  } catch (error) {
+    console.error('[SettingsLocationsPage] Error loading locations:', error)
+    if (error instanceof Error && error.message.includes('Chưa đăng nhập')) {
+      redirect('/login')
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-12 space-y-8">

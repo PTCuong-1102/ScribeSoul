@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Clock, FileText } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import { KnowledgeWeb } from '@/components/dashboard/KnowledgeWeb'
@@ -7,8 +8,15 @@ import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 import { ProductivityPulse } from '@/components/dashboard/ProductivityPulse'
 import { DashboardActions } from './DashboardActions'
 import { getDocumentTree, getProductivityStats } from "@/server/actions/documents"
+import { auth } from '@/lib/auth/server'
 
 export default async function DashboardPage({ params }: { params: Promise<{ workspaceId: string }> }) {
+  // Verify session before rendering
+  const { data: session } = await auth.getSession()
+  if (!session?.user?.id) {
+    redirect('/login')
+  }
+
   const { workspaceId } = await params;
   
   // FIX 4: Handle errors explicitly instead of silent failure
