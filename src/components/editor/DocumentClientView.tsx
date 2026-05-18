@@ -21,6 +21,16 @@ export function DocumentClientView({
   const [showAssistant, setShowAssistant] = useState(true)
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
 
+  React.useEffect(() => {
+    const handleToggle = () => {
+      setShowAssistant(prev => !prev)
+    }
+    window.addEventListener('toggle-soul-assistant', handleToggle)
+    return () => {
+      window.removeEventListener('toggle-soul-assistant', handleToggle)
+    }
+  }, [])
+
   return (
     <div className="flex w-full h-full relative overflow-hidden bg-surface">
       <CommandSearch workspaceId={workspaceId} />

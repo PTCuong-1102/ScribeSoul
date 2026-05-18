@@ -30,14 +30,36 @@ export default async function DocumentPage({ params }: { params: Promise<{ works
     return <div className="p-12 text-center font-sans">Không tìm thấy tài liệu hoặc bạn không có quyền truy cập.</div>
   }
 
-  // Restore tree structure if needed, or pass flat string. 
-  // For simplicity, we just pass the blocks if they exist.
+  // Reconstruct tree structure from flat list of blocks ordered by sortOrder
   const initialContent = doc.blocks.length > 0 
-    ? doc.blocks.map((b) => ({
-        id: b.id,
-        type: b.type,
-        content: b.content,
-      } as unknown as PartialBlock))
+    ? (() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blockMap = new Map<string, any>()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const roots: any[] = []
+
+        // 1. Map each block to BlockNote PartialBlock format
+        doc.blocks.forEach((b) => {
+          blockMap.set(b.id, {
+            id: b.id,
+            type: b.type,
+            content: b.content,
+            children: [],
+          })
+        })
+
+        // 2. Link children to their parent, preserve roots
+        doc.blocks.forEach((b) => {
+          const node = blockMap.get(b.id)
+          if (b.parentBlockId && blockMap.has(b.parentBlockId)) {
+            blockMap.get(b.parentBlockId).children.push(node)
+          } else {
+            roots.push(node)
+          }
+        })
+
+        return roots as PartialBlock[]
+      })()
     : undefined
 
   return (

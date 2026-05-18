@@ -47,26 +47,32 @@ export async function POST(req: Request) {
     // 2. Generate Embeddings
     const embeddingResults = await generateEmbeddings(chunks.map(c => c.content))
 
-    // 3. Clear old chunks for this document and insert new ones (Transaction)
+    // 3. Clear old chunks for this document and insert new ones in bulk (Transaction)
     await db.transaction(async (tx) => {
       // Drizzle doesn't have a direct "cascade delete" in simple way for transactions 
       // without relations setup in DB, but we do it manually here.
       await tx.delete(documentChunks).where(eq(documentChunks.documentId, documentId))
       
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i]
-        const embedding = embeddingResults[i]
+      if (chunks.length > 0) {
+        // Bulk insert all chunks at once and return their new IDs
+        const newChunks = await tx.insert(documentChunks).values(
+          chunks.map(chunk => ({
+            documentId: chunk.metadata.docId,
+            content: chunk.content,
+            metadata: { blockIds: chunk.metadata.blockIds }
+          }))
+        ).returning()
 
-        const [newChunk] = await tx.insert(documentChunks).values({
-          documentId: chunk.metadata.docId,
-          content: chunk.content,
-          metadata: { blockIds: chunk.metadata.blockIds }
-        }).returning()
-
-        await tx.insert(chunkEmbeddings).values({
+        // Build the embedding rows matching the newly inserted chunks
+        const embeddingValues = newChunks.map((newChunk, i) => ({
           chunkId: newChunk.id,
-          embedding: embedding
-        })
+          embedding: embeddingResults[i]
+        }))
+
+        // Bulk insert all embeddings at once
+        if (embeddingValues.length > 0) {
+          await tx.insert(chunkEmbeddings).values(embeddingValues)
+        }
       }
     })
 

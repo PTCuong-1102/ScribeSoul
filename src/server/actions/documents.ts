@@ -5,7 +5,7 @@ import { db } from "@/lib/db"
 import { blocks } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
 import { workspaces } from "@/lib/db/schema/workspaces"
-import { eq, and, asc, desc, ilike, inArray, gte } from "drizzle-orm"
+import { eq, and, asc, desc, ilike, inArray, gte, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -275,17 +275,17 @@ export async function getProductivityStats(workspaceId: string): Promise<Product
 
   const wordsDelta = wordsToday - wordsYesterday
 
-  // Calculate streak: check each previous day for any block activity
-  // We need to fetch all blocks to compute daily activity for streak
-  const allBlocks = await db.query.blocks.findMany({
-    where: inArray(blocks.documentId, docIds),
-    columns: { updatedAt: true },
-  })
+  // Get unique activity days using high-performance SQL DISTINCT query
+  const activeDates = await db
+    .select({
+      date: sql<string>`DISTINCT (${blocks.updatedAt}::date)::text`
+    })
+    .from(blocks)
+    .where(inArray(blocks.documentId, docIds))
 
-  const daysWithActivity = new Set<string>()
-  for (const block of allBlocks) {
-    daysWithActivity.add(toLocalDayKey(new Date(block.updatedAt)))
-  }
+  const daysWithActivity = new Set(
+    activeDates.map(r => r.date)
+  )
 
   let streak = 0
   const cursor = new Date(now)

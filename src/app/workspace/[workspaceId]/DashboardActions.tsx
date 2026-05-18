@@ -6,6 +6,8 @@ import { Plus, Search } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { createDocument } from "@/server/actions/documents"
 
+import { toast } from 'sonner'
+
 export function DashboardActions({ workspaceId }: { workspaceId: string }) {
   const router = useRouter()
   const [isCreating, setIsCreating] = useState(false)
@@ -21,8 +23,10 @@ export function DashboardActions({ workspaceId }: { workspaceId: string }) {
         status: 'draft'
       })
       router.push(`/workspace/${workspaceId}/documents/${doc.id}`)
+      toast.success('Đã tạo bản thảo mới!')
     } catch (e) {
       console.error(e)
+      toast.error('Không thể tạo bản thảo mới. Vui lòng thử lại sau.')
     } finally {
       setIsCreating(false)
     }

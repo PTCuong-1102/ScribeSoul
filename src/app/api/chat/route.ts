@@ -123,6 +123,11 @@ export async function POST(req: Request) {
               },
             }
           ]);
+
+          // Update conversation updatedAt timestamp for sorting
+          await db.update(aiConversations)
+            .set({ updatedAt: new Date() })
+            .where(eq(aiConversations.id, conversationId));
         }
       },
     });

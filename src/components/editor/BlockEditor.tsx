@@ -40,15 +40,20 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
   // Track previous block IDs to detect deletions
   const prevBlockIdsRef = React.useRef<Set<string>>(new Set())
 
-  // Initialize prevBlockIdsRef from initial content
+  // Initialize prevBlockIdsRef recursively from nested initial content
   React.useEffect(() => {
     if (initialContent) {
       const ids = new Set<string>()
-      for (const b of initialContent) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const id = (b as any).id
-        if (typeof id === "string") ids.add(id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const collectIds = (blocks: any[]) => {
+        for (const b of blocks) {
+          if (typeof b.id === "string") ids.add(b.id)
+          if (b.children && b.children.length > 0) {
+            collectIds(b.children)
+          }
+        }
       }
+      collectIds(initialContent)
       prevBlockIdsRef.current = ids
     }
   }, [initialContent])
@@ -225,14 +230,28 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
             if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
             saveTimeoutRef.current = setTimeout(async () => {
               try {
+                // Recursively flatten BlockNote document tree to a flat array for DB storage
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const currentBlocks = editor.document.map((b: any, idx: number) => ({
-                  id: b.id,
-                  type: b.type,
-                  content: b.content,
-                  parentBlockId: b.props?.parentBlockId || null,
-                  sortOrder: idx,
-                }))
+                const flattenBlocks = (blocks: any[], parentId: string | null = null): any[] => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  let result: any[] = []
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  blocks.forEach((b: any, idx: number) => {
+                    result.push({
+                      id: b.id,
+                      type: b.type,
+                      content: b.content,
+                      parentBlockId: parentId,
+                      sortOrder: idx,
+                    })
+                    if (b.children && b.children.length > 0) {
+                      result = result.concat(flattenBlocks(b.children, b.id))
+                    }
+                  })
+                  return result
+                }
+
+                const currentBlocks = flattenBlocks(editor.document)
 
                 // Detect deleted blocks by comparing current IDs with previous IDs
                 const currentIds = new Set(currentBlocks.map((b: { id: string }) => b.id))

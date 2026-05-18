@@ -166,7 +166,12 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 space-y-1 border-t border-border/5">
-        <button className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-secondary hover:bg-secondary/5 transition-all group">
+        <button 
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('toggle-soul-assistant'))
+          }}
+          className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-secondary hover:bg-secondary/5 transition-all group"
+        >
           <Sparkles className="w-4 h-4 transition-colors group-hover:animate-pulse" />
           <span className="font-sans text-sm font-medium">Soul Assistant</span>
         </button>
