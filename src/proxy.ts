@@ -13,12 +13,12 @@ function getAuthMiddleware() {
   return authMiddleware
 }
 
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   try {
     // Delegate to NeonAuth middleware for session validation
     return getAuthMiddleware()(request)
   } catch (error) {
-    console.error('[Auth Middleware] Error:', error)
+    console.error('[Auth Proxy] Error:', error)
     // On error, redirect to login for safety
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('from', request.nextUrl.pathname)
