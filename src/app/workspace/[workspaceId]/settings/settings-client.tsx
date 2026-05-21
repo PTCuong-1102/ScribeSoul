@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useTheme } from "next-themes"
-import { getUserSettings, updateProfile } from "@/server/actions/settings"
+import { getUserSettings, updateProfile, updateAIPreferences } from "@/server/actions/settings"
+import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 export function SettingsPageClient() {
   const { theme, setTheme } = useTheme()
@@ -14,7 +16,10 @@ export function SettingsPageClient() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   
+  const [activeTab, setActiveTab] = useState("profile")
   const [name, setName] = useState("")
+  const [aiModel, setAiModel] = useState("soul-intelligence-v1")
+  const [creativity, setCreativity] = useState("medium")
 
   useEffect(() => {
     async function load() {
@@ -22,6 +27,11 @@ export function SettingsPageClient() {
       if (data) {
         setUser(data as unknown as Record<string, unknown>)
         setName(data.name || "")
+        if (data.aiPreferences) {
+          const prefs = data.aiPreferences as Record<string, unknown>
+          if (typeof prefs.model === "string") setAiModel(prefs.model)
+          if (typeof prefs.creativity === "string") setCreativity(prefs.creativity)
+        }
       }
       setLoading(false)
     }
@@ -31,10 +41,18 @@ export function SettingsPageClient() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await updateProfile({ name })
-      // Success feedback
+      if (activeTab === "profile") {
+        await updateProfile({ name })
+        toast.success("Đã cập nhật thông tin cá nhân!")
+      } else if (activeTab === "ai") {
+        await updateAIPreferences({ model: aiModel, creativity })
+        toast.success("Đã cập nhật thiết lập AI!")
+      } else {
+        toast.success("Đã lưu thiết lập thành công!")
+      }
     } catch (e) {
       console.error(e)
+      toast.error("Có lỗi xảy ra khi lưu thiết lập.")
     } finally {
       setSaving(false)
     }
@@ -61,9 +79,18 @@ export function SettingsPageClient() {
           ].map((item) => (
             <button 
               key={item.id}
-              className="w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-sm font-sans text-on-surface-variant hover:bg-surface-container-low transition-all group"
+              onClick={() => setActiveTab(item.id)}
+              className={cn(
+                "w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-sm font-sans transition-all group",
+                activeTab === item.id 
+                  ? "bg-surface-container-high text-primary font-medium" 
+                  : "text-on-surface-variant hover:bg-surface-container-low"
+              )}
             >
-              <item.icon className="w-4 h-4 group-hover:text-primary transition-colors" />
+              <item.icon className={cn(
+                "w-4 h-4 transition-colors",
+                activeTab === item.id ? "text-primary" : "group-hover:text-primary"
+              )} />
               <span>{item.label}</span>
             </button>
           ))}
@@ -77,89 +104,146 @@ export function SettingsPageClient() {
 
         {/* Content */}
         <div className="md:col-span-3 space-y-12">
-          {/* Profile Section */}
-          <section className="space-y-6">
-            <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Thông tin cá nhân</h3>
-            <div className="grid grid-cols-1 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Tên hiển thị</label>
-                <Input 
-                  value={name} 
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                  className="bg-surface-container-lowest border-border/10 rounded-xl font-serif text-lg py-6 focus:ring-secondary/20" 
-                />
-              </div>
-              <div className="space-y-2 opacity-60">
-                <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Email (Liên kết)</label>
-                <Input 
-                  value={(user?.email as string) || ""} 
-                  disabled
-                  className="bg-surface-container-low border-border/10 rounded-xl font-serif text-lg py-6"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Theme Section */}
-          <section className="space-y-6">
-            <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Chủ đề & Giao diện</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { id: 'light', label: 'Ngày', icon: Sun },
-                { id: 'dark', label: 'Đêm', icon: Moon },
-                { id: 'system', label: 'Hệ thống', icon: Monitor },
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setTheme(t.id)}
-                  className={cn(
-                    "flex flex-col items-center justify-center p-6 rounded-2xl border transition-all space-y-3 group",
-                    theme === t.id 
-                      ? "bg-surface-container-high border-secondary shadow-sm" 
-                      : "bg-surface-container-low border-border/10 hover:border-border/30"
-                  )}
-                >
-                  <t.icon className={cn(
-                   "w-6 h-6 group-hover:scale-110 transition-transform",
-                   theme === t.id ? "text-secondary" : "text-on-surface-variant"
-                  )} />
-                  <span className="text-xs font-sans font-medium uppercase tracking-tighter">{t.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* AI Capabilities */}
-          <section className="space-y-6">
-            <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Mô hình AI</h3>
-            <div className="p-6 rounded-2xl bg-surface-container-low border border-border/10 flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="font-serif text-on-surface">Soul Intelligence (v1.0)</span>
-                  <Badge className="bg-secondary/10 text-secondary border-none text-[10px]">Active</Badge>
+          {activeTab === 'profile' && (
+            <section className="space-y-6">
+              <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Thông tin cá nhân</h3>
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Tên hiển thị</label>
+                  <Input 
+                    value={name} 
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                    className="bg-surface-container-lowest border-border/10 rounded-xl font-serif text-lg py-6 focus:ring-secondary/20" 
+                  />
                 </div>
-                <p className="text-xs text-on-surface-variant font-sans italic">Mô hình tối ưu cho viết lách sáng tạo và phân tích cốt truyện.</p>
+                <div className="space-y-2 opacity-60">
+                  <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Email (Liên kết)</label>
+                  <Input 
+                    value={(user?.email as string) || ""} 
+                    disabled
+                    className="bg-surface-container-low border-border/10 rounded-xl font-serif text-lg py-6"
+                  />
+                </div>
               </div>
-              <Sparkles className="w-8 h-8 text-secondary/20" />
-            </div>
-          </section>
+            </section>
+          )}
 
-          <div className="pt-8 flex justify-end">
-             <Button 
-               onClick={handleSave} 
-               disabled={saving}
-               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-8 py-6 font-sans text-sm uppercase tracking-widest shadow-lg shadow-primary/10 transition-all active:scale-95"
-             >
-               {saving ? "Đang lưu..." : "Lưu thay đổi"}
-               <Save className="w-4 h-4 ml-2" />
-             </Button>
-          </div>
+          {activeTab === 'appearance' && (
+            <section className="space-y-6">
+              <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Chủ đề & Giao diện</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { id: 'light', label: 'Ngày', icon: Sun },
+                  { id: 'dark', label: 'Đêm', icon: Moon },
+                  { id: 'system', label: 'Hệ thống', icon: Monitor },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTheme(t.id)}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-6 rounded-2xl border transition-all space-y-3 group",
+                      theme === t.id 
+                        ? "bg-surface-container-high border-secondary shadow-sm" 
+                        : "bg-surface-container-low border-border/10 hover:border-border/30"
+                    )}
+                  >
+                    <t.icon className={cn(
+                     "w-6 h-6 group-hover:scale-110 transition-transform",
+                     theme === t.id ? "text-secondary" : "text-on-surface-variant"
+                    )} />
+                    <span className="text-xs font-sans font-medium uppercase tracking-tighter">{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'ai' && (
+            <section className="space-y-6">
+              <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Thiết lập Trợ lý AI</h3>
+              <div className="space-y-6">
+                <div className="p-6 rounded-2xl bg-surface-container-low border border-border/10 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-serif text-on-surface">Soul Intelligence (v1.0)</span>
+                      <Badge className="bg-secondary/10 text-secondary border-none text-[10px]">Active</Badge>
+                    </div>
+                    <p className="text-xs text-on-surface-variant font-sans italic">Mô hình tối ưu cho viết lách sáng tạo và phân tích cốt truyện.</p>
+                  </div>
+                  <Sparkles className="w-8 h-8 text-secondary/20" />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Mô hình AI ưu tiên</label>
+                    <select
+                      value={aiModel}
+                      onChange={(e) => setAiModel(e.target.value)}
+                      className="w-full bg-surface-container-lowest border border-border/10 rounded-xl p-4 font-sans text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                    >
+                      <option value="soul-intelligence-v1">Soul Intelligence v1.0 (Khuyên dùng)</option>
+                      <option value="gpt-4o">GPT-4o (Đa năng)</option>
+                      <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (Văn phong mượt mà)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Độ sáng tạo (Creativity)</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { id: 'low', label: 'Nhất quán (Low)' },
+                        { id: 'medium', label: 'Cân bằng (Medium)' },
+                        { id: 'high', label: 'Tự do (High)' }
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setCreativity(opt.id)}
+                          className={cn(
+                            "py-3 px-4 rounded-xl border text-xs font-sans text-center transition-all",
+                            creativity === opt.id
+                              ? "bg-secondary/10 border-secondary text-secondary font-medium"
+                              : "bg-surface-container-lowest border-border/10 text-on-surface-variant hover:bg-surface-container-low"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'notifications' && (
+            <section className="space-y-6">
+              <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Thông báo</h3>
+              <p className="text-sm font-sans text-on-surface-variant italic">Tính năng quản lý thông báo đang được phát triển.</p>
+            </section>
+          )}
+
+          {activeTab === 'security' && (
+            <section className="space-y-6">
+              <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Bảo mật</h3>
+              <p className="text-sm font-sans text-on-surface-variant italic">Tính năng quản lý bảo mật đang được phát triển.</p>
+            </section>
+          )}
+
+          {/* Render Save Button only for editable tabs */}
+          {['profile', 'ai', 'appearance'].includes(activeTab) && (
+            <div className="pt-8 flex justify-end">
+               <Button 
+                 onClick={handleSave} 
+                 disabled={saving}
+                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-8 py-6 font-sans text-sm uppercase tracking-widest shadow-lg shadow-primary/10 transition-all active:scale-95"
+               >
+                 {saving ? "Đang lưu..." : "Lưu thay đổi"}
+                 <Save className="w-4 h-4 ml-2" />
+               </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
-}
-
-function cn(...classes: (string | boolean | undefined | null)[]) {
-  return classes.filter(Boolean).join(" ")
 }

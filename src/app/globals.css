@@ -99,6 +99,7 @@
   --surface-container-lowest: #060e20;
   --surface-container-low: #131b2e;
   --surface-container: #171f33;
+  --surface-container-high: #21293d;
   --surface-container-highest: #2d3449;
 
   --on-surface: #E2E8F0;
@@ -167,6 +168,7 @@
   background: linear-gradient(90deg, transparent, var(--ai-glow), transparent);
   transform: translateX(-100%);
   animation: shimmer 3s infinite;
+  pointer-events: none;
 }
 
 @keyframes shimmer {

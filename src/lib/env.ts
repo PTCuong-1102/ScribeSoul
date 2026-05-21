@@ -9,9 +9,9 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url(),
   
-  // Auth
-  NEXTAUTH_URL: z.string().url().optional(),
-  NEXTAUTH_SECRET: z.string().min(32),
+  // Auth (Neon Auth)
+  NEON_AUTH_BASE_URL: z.string().url().optional(),
+  NEON_AUTH_COOKIE_SECRET: z.string().min(32).optional(),
   
   // OAuth (optional but recommended)
   GITHUB_ID: z.string().optional(),
@@ -31,6 +31,17 @@ const envSchema = z.object({
   
   // Environment
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+}).refine((data) => {
+  // If in production or on Vercel, auth env vars MUST be present
+  const isVercel = process.env.VERCEL === '1'
+  const isProd = data.NODE_ENV === 'production'
+  if ((isProd || isVercel) && (!data.NEON_AUTH_BASE_URL || !data.NEON_AUTH_COOKIE_SECRET)) {
+    return false
+  }
+  return true
+}, {
+  message: "NEON_AUTH_BASE_URL and NEON_AUTH_COOKIE_SECRET are required in production or Vercel environments",
+  path: ["NEON_AUTH_BASE_URL"]
 })
 
 export type EnvConfig = z.infer<typeof envSchema>

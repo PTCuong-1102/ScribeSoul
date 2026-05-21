@@ -48,11 +48,49 @@ interface ProductivityStats {
   dailyGoal: number
 }
 
-function toLocalDayKey(date: Date) {
-  const yyyy = date.getFullYear()
-  const mm = String(date.getMonth() + 1).padStart(2, "0")
-  const dd = String(date.getDate()).padStart(2, "0")
-  return `${yyyy}-${mm}-${dd}`
+function toLocalDayKey(date: Date, timezone?: string) {
+  try {
+    const formatter = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: timezone || 'UTC',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+    return formatter.format(date) // "YYYY-MM-DD"
+  } catch (e) {
+    const yyyy = date.getFullYear()
+    const mm = String(date.getMonth() + 1).padStart(2, "0")
+    const dd = String(date.getDate()).padStart(2, "0")
+    return `${yyyy}-${mm}-${dd}`
+  }
+}
+
+function getStartOfTodayInTimezone(timezone?: string): Date {
+  const now = new Date()
+  if (!timezone) {
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  }
+  try {
+    const formatter = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+    const dateStr = formatter.format(now) // "YYYY-MM-DD"
+    
+    // Find offset
+    const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }))
+    const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }))
+    const offsetMs = tzDate.getTime() - utcDate.getTime()
+    
+    const [y, m, d] = dateStr.split('-').map(Number)
+    const midnightUtc = Date.UTC(y, m - 1, d)
+    return new Date(midnightUtc - offsetMs)
+  } catch (e) {
+    console.error(`[TIMEZONE] Failed to calculate start of today for timezone ${timezone}:`, e)
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  }
 }
 
 function extractBlockText(content: unknown): string {
@@ -126,10 +164,14 @@ export async function updateDocument(id: string, data: Partial<z.infer<typeof do
   
   await checkWorkspaceOwnership(existing.workspaceId)
 
+  // Validate partial data and strip workspaceId to prevent IDOR workspace switching
+  const validated = documentSchema.partial().parse(data)
+  const { workspaceId: _, ...updateFields } = validated
+
   const [updated] = await db
     .update(documents)
     .set({
-      ...data,
+      ...updateFields,
       updatedAt: new Date(),
     })
     .where(eq(documents.id, id))
@@ -178,11 +220,12 @@ export async function searchDocuments(workspaceId: string, query: string) {
 
 export async function getRecentDocuments(workspaceId: string, limit: number = 5) {
   await checkWorkspaceOwnership(workspaceId)
+  const safeLimit = Math.min(limit, 50)
   
   return db.query.documents.findMany({
     where: eq(documents.workspaceId, workspaceId),
     orderBy: [desc(documents.updatedAt)],
-    limit,
+    limit: safeLimit,
   })
 }
 
@@ -202,7 +245,7 @@ export async function getDocumentsByType(workspaceId: string, type: "character" 
 // We filter blocks by updatedAt >= start of today, then sum their word counts.
 // This is still an approximation (editing a block counts all its words),
 // but at least it won't count blocks that weren't touched today.
-export async function getProductivityStats(workspaceId: string): Promise<ProductivityStats> {
+export async function getProductivityStats(workspaceId: string, timezone?: string): Promise<ProductivityStats> {
   await checkWorkspaceOwnership(workspaceId)
 
   const workspace = await db.query.workspaces.findFirst({
@@ -233,9 +276,8 @@ export async function getProductivityStats(workspaceId: string): Promise<Product
 
   const docIds = workspaceDocs.map((doc) => doc.id)
 
-  // Calculate start of today and yesterday for precise filtering
-  const now = new Date()
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  // Calculate start of today and yesterday based on timezone for precise filtering
+  const startOfToday = getStartOfTodayInTimezone(timezone)
   const startOfYesterday = new Date(startOfToday)
   startOfYesterday.setDate(startOfYesterday.getDate() - 1)
 
@@ -257,8 +299,7 @@ export async function getProductivityStats(workspaceId: string): Promise<Product
     where: and(
       inArray(blocks.documentId, docIds),
       gte(blocks.updatedAt, startOfYesterday),
-      // Note: we can't easily do "< startOfToday" with findMany,
-      // so we fetch all blocks from yesterday onward and filter
+      // Note: we fetch yesterday onward and filter
     ),
     columns: {
       content: true,
@@ -275,21 +316,37 @@ export async function getProductivityStats(workspaceId: string): Promise<Product
 
   const wordsDelta = wordsToday - wordsYesterday
 
-  // Get unique activity days using high-performance SQL DISTINCT query
+  // Limit streak calculation query to 365 days lookback for performance optimization
+  const lookbackLimit = new Date(startOfToday)
+  lookbackLimit.setDate(lookbackLimit.getDate() - 365)
+
+  // Get unique activity days using high-performance SQL DISTINCT query with timezone offset
+  const dbTimezone = timezone || 'UTC'
   const activeDates = await db
     .select({
-      date: sql<string>`DISTINCT (${blocks.updatedAt}::date)::text`
+      date: sql<string>`DISTINCT (timezone(${dbTimezone}, ${blocks.updatedAt})::date)::text`
     })
     .from(blocks)
-    .where(inArray(blocks.documentId, docIds))
+    .where(
+      and(
+        inArray(blocks.documentId, docIds),
+        gte(blocks.updatedAt, lookbackLimit)
+      )
+    )
 
   const daysWithActivity = new Set(
     activeDates.map(r => r.date)
   )
 
   let streak = 0
-  const cursor = new Date(now)
-  while (daysWithActivity.has(toLocalDayKey(cursor))) {
+  const cursor = new Date(startOfToday)
+  
+  if (!daysWithActivity.has(toLocalDayKey(cursor, timezone))) {
+    // If no activity today, check yesterday to keep streak active
+    cursor.setDate(cursor.getDate() - 1)
+  }
+
+  while (daysWithActivity.has(toLocalDayKey(cursor, timezone))) {
     streak += 1
     cursor.setDate(cursor.getDate() - 1)
   }

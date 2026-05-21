@@ -8,6 +8,7 @@ export const blocks = pgTable("block", {
     .references(() => documents.id, { onDelete: "cascade" }),
   type: text("type").notNull(), // BlockNote block type (paragraph, heading, etc)
   content: jsonb("content").default({}).notNull(),
+  props: jsonb("props").default({}).notNull(),
   sortOrder: integer("sort_order").notNull(),
   parentBlockId: uuid("parent_block_id"), // For nested blocks
   createdAt: timestamp("created_at").defaultNow().notNull(),

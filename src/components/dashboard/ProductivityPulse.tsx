@@ -42,7 +42,7 @@ export function ProductivityPulse({ stats }: ProductivityPulseProps) {
         <div className="h-2 bg-surface rounded-full overflow-hidden border border-border/5">
           <div 
             className="h-full bg-secondary shadow-[0_0_15px_var(--ai-glow)] transition-all duration-1000 ease-out" 
-            style={{ width: `${stats.percentOfGoal}%` }} 
+            style={{ width: `${Math.min(stats.percentOfGoal, 100)}%` }} 
           />
         </div>
       </div>

@@ -135,6 +135,7 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
     try {
       const response = await fetch("/api/ai/autocomplete", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           prompt: currentText,
           context 
@@ -184,6 +185,7 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
     try {
       const response = await fetch("/api/ai/autocomplete", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: currentText,
           context,

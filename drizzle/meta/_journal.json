@@ -8,6 +8,27 @@
       "when": 1776483394845,
       "tag": "0000_lively_maelstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776483394846,
+      "tag": "0001_add_vector_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776483394847,
+      "tag": "0002_add_block_props",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776483394848,
+      "tag": "0003_add_user_ai_preferences",
+      "breakpoints": true
     }
   ]
 }

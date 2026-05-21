@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Sparkles, Save, History, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { PartialBlock } from "@blocknote/core"
 
 export function DocumentClientView({ 
@@ -17,7 +18,7 @@ export function DocumentClientView({
   workspaceId: string, 
   docId: string, 
   initialContent: PartialBlock[] | undefined 
-}) {
+  }) {
   const [showAssistant, setShowAssistant] = useState(true)
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
 
@@ -37,13 +38,20 @@ export function DocumentClientView({
       {/* Main Editor Area */}
       <div className={cn(
         "flex-1 overflow-y-auto px-4 lg:px-0 transition-all duration-500",
-        showAssistant ? "mr-0" : ""
+        showAssistant ? "lg:pr-96" : ""
       )}>
-        <BlockEditor 
-          documentId={docId}
-          initialContent={initialContent} 
-          onSyncStateChange={(state) => setSyncStatus(state)} 
-        />
+        <ErrorBoundary fallback={
+          <div className="p-12 text-center font-sans space-y-4">
+            <h3 className="text-xl font-serif text-destructive">Lỗi trình chỉnh sửa</h3>
+            <p className="text-sm text-on-surface-variant">Không thể tải trình biên tập văn bản.</p>
+          </div>
+        }>
+          <BlockEditor 
+            documentId={docId}
+            initialContent={initialContent} 
+            onSyncStateChange={(state) => setSyncStatus(state)} 
+          />
+        </ErrorBoundary>
       </div>
 
       {/* Floating Toolbar */}
@@ -85,7 +93,15 @@ export function DocumentClientView({
         showAssistant ? "w-96 translate-x-0" : "w-0 translate-x-full"
       )}>
         <div className="w-96 h-full">
-          <ChatInterface workspaceId={workspaceId} />
+          <ErrorBoundary fallback={
+            <div className="p-6 h-full flex flex-col items-center justify-center font-sans text-center space-y-3">
+              <Sparkles className="w-8 h-8 text-destructive/40" />
+              <h4 className="font-serif text-destructive">Lỗi Soul Assistant</h4>
+              <p className="text-xs text-on-surface-variant">Không thể khởi chạy trợ lý AI.</p>
+            </div>
+          }>
+            <ChatInterface workspaceId={workspaceId} />
+          </ErrorBoundary>
         </div>
       </aside>
     </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useChat } from "@ai-sdk/react"
 import { UIMessage, DefaultChatTransport } from "ai"
 import { Sparkles, Send, BookOpen, History, Plus, Trash2, Loader2, MessageSquare, ArrowLeft } from "lucide-react"
@@ -14,17 +14,27 @@ import {
 } from "@/server/actions/chat"
 import { toast } from "sonner"
 
+export interface Conversation {
+  id: string
+  title: string
+  updatedAt: string | Date
+  createdAt: string | Date
+  userId: string
+  workspaceId: string
+  contextType: string
+}
+
 export function ChatInterface({ workspaceId }: { workspaceId: string }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [conversations, setConversations] = useState<any[]>([])
+  const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [isCreatingConv, setIsCreatingConv] = useState(false)
+  const [convToDelete, setConvToDelete] = useState<string | null>(null)
 
   // 1. Select conversation and load messages
-  const handleSelectConversation = async (id: string) => {
+  const handleSelectConversation = useCallback(async (id: string) => {
     setActiveConversationId(id)
     setShowHistory(false)
     setIsLoadingHistory(true)
@@ -46,26 +56,29 @@ export function ChatInterface({ workspaceId }: { workspaceId: string }) {
     } finally {
       setIsLoadingHistory(false)
     }
-  }
+  }, [])
 
   // 2. Create new conversation
-  const handleNewConversation = async () => {
+  const handleNewConversation = useCallback(async (currentLength?: number) => {
     if (isCreatingConv) return
     setIsCreatingConv(true)
     try {
-      const newConv = await createConversation(workspaceId, `Trò chuyện #${conversations.length + 1}`)
+      const length = typeof currentLength === "number" ? currentLength : conversations.length
+      const newConv = await createConversation(workspaceId, `Trò chuyện #${length + 1}`)
       setConversations((prev) => [newConv, ...prev])
       setActiveConversationId(newConv.id)
       setInitialMessages([])
       setShowHistory(false)
       toast.success("Bắt đầu cuộc trò chuyện mới!")
+      return newConv
     } catch (error) {
       console.error("Failed to create conversation:", error)
       toast.error("Không thể tạo cuộc trò chuyện mới.")
+      return null
     } finally {
       setIsCreatingConv(false)
     }
-  }
+  }, [workspaceId, isCreatingConv, conversations.length])
 
   // 3. Fetch conversations on mount
   useEffect(() => {
@@ -78,40 +91,43 @@ export function ChatInterface({ workspaceId }: { workspaceId: string }) {
           handleSelectConversation(list[0].id)
         } else {
           // If no conversations, auto-create one
-          await handleNewConversation()
+          await handleNewConversation(0)
         }
       } catch (error) {
         console.error("Failed to load conversations:", error)
       }
     }
     loadConversations()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId])
+  }, [workspaceId, handleSelectConversation, handleNewConversation])
 
-  // 4. Delete conversation
-  const handleDeleteConversation = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    if (!confirm("Bạn có chắc chắn muốn xóa cuộc hội thoại này?")) return
+  // 4. Confirm Delete
+  const confirmDelete = useCallback(async (id: string) => {
     try {
       await deleteConversation(id)
-      setConversations((prev) => prev.filter((c) => c.id !== id))
+      const remaining = conversations.filter((c) => c.id !== id)
+      setConversations(remaining)
       toast.success("Đã xóa cuộc hội thoại.")
       
       if (activeConversationId === id) {
-        const remaining = conversations.filter((c) => c.id !== id)
         if (remaining.length > 0) {
           handleSelectConversation(remaining[0].id)
         } else {
           setActiveConversationId(null)
           setInitialMessages([])
-          await handleNewConversation()
+          await handleNewConversation(0)
         }
       }
     } catch (error) {
       console.error("Failed to delete conversation:", error)
       toast.error("Không thể xóa cuộc hội thoại.")
     }
-  }
+  }, [conversations, activeConversationId, handleSelectConversation, handleNewConversation])
+
+  // 5. Delete conversation trigger
+  const handleDeleteConversation = useCallback((e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    setConvToDelete(id)
+  }, [])
 
   return (
     <div className="flex flex-col h-full bg-surface dark:bg-surface border-l border-border/5 relative overflow-hidden">
@@ -121,6 +137,7 @@ export function ChatInterface({ workspaceId }: { workspaceId: string }) {
           {showHistory ? (
             <button 
               onClick={() => setShowHistory(false)}
+              aria-label="Quay lại"
               className="p-1 rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -144,6 +161,7 @@ export function ChatInterface({ workspaceId }: { workspaceId: string }) {
           <button
             onClick={() => setShowHistory(!showHistory)}
             title="Lịch sử chat"
+            aria-label="Lịch sử chat"
             className={cn(
               "p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-300",
               showHistory && "bg-surface-container-high text-primary"
@@ -152,9 +170,10 @@ export function ChatInterface({ workspaceId }: { workspaceId: string }) {
             <History className="w-4 h-4" />
           </button>
           <button
-            onClick={handleNewConversation}
+            onClick={() => handleNewConversation()}
             disabled={isCreatingConv}
             title="Hội thoại mới"
+            aria-label="Hội thoại mới"
             className="p-2 rounded-xl text-on-surface-variant hover:text-secondary hover:bg-secondary/5 transition-all duration-300 disabled:opacity-50"
           >
             {isCreatingConv ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -200,6 +219,7 @@ export function ChatInterface({ workspaceId }: { workspaceId: string }) {
                     </div>
                     <button
                       onClick={(e) => handleDeleteConversation(e, conv.id)}
+                      aria-label="Xóa cuộc hội thoại"
                       className="p-1.5 rounded-lg text-on-surface-variant/40 hover:text-destructive hover:bg-destructive/5 transition-all opacity-0 group-hover:opacity-100 md:opacity-100"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -211,7 +231,7 @@ export function ChatInterface({ workspaceId }: { workspaceId: string }) {
           </ScrollArea>
           <div className="p-4 border-t border-border/5">
             <button
-              onClick={handleNewConversation}
+              onClick={() => handleNewConversation()}
               className="w-full h-11 flex items-center justify-center space-x-2 rounded-xl bg-secondary text-secondary-foreground shadow-lg shadow-secondary/10 hover:scale-[1.02] transition-all font-sans text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
@@ -242,6 +262,36 @@ export function ChatInterface({ workspaceId }: { workspaceId: string }) {
           </div>
         )}
       </div>
+
+      {/* Custom delete confirmation modal */}
+      {convToDelete && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-container-low border border-border/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <h4 className="font-serif text-base font-semibold text-on-surface mb-2">Xóa cuộc hội thoại?</h4>
+            <p className="font-sans text-sm text-on-surface-variant mb-6">
+              Bạn có chắc chắn muốn xóa cuộc hội thoại này? Hành động này không thể hoàn tác và tất cả tin nhắn sẽ bị xóa vĩnh viễn.
+            </p>
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setConvToDelete(null)}
+                className="px-4 py-2 rounded-xl text-sm font-medium font-sans text-on-surface-variant hover:bg-surface-container-high transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={async () => {
+                  const id = convToDelete
+                  setConvToDelete(null)
+                  await confirmDelete(id)
+                }}
+                className="px-4 py-2 rounded-xl text-sm font-medium font-sans bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md shadow-destructive/10 transition-colors"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -255,6 +305,7 @@ interface ChatBoxProps {
 function ChatBox({ workspaceId, conversationId, initialMessages }: ChatBoxProps) {
   const [input, setInput] = useState("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { messages, sendMessage, status } = useChat<UIMessage>({
     messages: initialMessages,
@@ -287,6 +338,15 @@ function ChatBox({ workspaceId, conversationId, initialMessages }: ChatBoxProps)
       }
     }
   }, [messages, isLoading])
+
+  // Auto-resize textarea height
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    textarea.style.height = "auto"
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
+  }, [input])
 
   return (
     <div className="flex flex-col h-full bg-surface dark:bg-surface">
@@ -345,6 +405,7 @@ function ChatBox({ workspaceId, conversationId, initialMessages }: ChatBoxProps)
       <div className="p-4 bg-surface-container-low/50 border-t border-border/5 backdrop-blur-md">
         <form onSubmit={handleSubmit} className="relative group">
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={handleInputChange}
             placeholder="Kể cho tôi nghe về..."
@@ -360,6 +421,7 @@ function ChatBox({ workspaceId, conversationId, initialMessages }: ChatBoxProps)
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
+            aria-label="Gửi tin nhắn"
             className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-secondary text-secondary-foreground flex items-center justify-center shadow-lg shadow-secondary/20 hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100"
           >
             <Send className="w-4 h-4" />

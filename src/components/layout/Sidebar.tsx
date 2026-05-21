@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useParams, usePathname, useRouter } from 'next/navigation'
-import { createDocument } from "@/server/actions/documents"
+import { useParams, usePathname } from 'next/navigation'
+import { useCreateDocument } from '@/hooks/use-create-document'
 import { 
   BookOpen, 
   Users, 
@@ -20,11 +20,16 @@ import { cn } from '@/lib/utils'
 export function Sidebar() {
   const pathname = usePathname()
   const params = useParams()
-  const router = useRouter()
   const workspaceId = typeof params?.workspaceId === "string" ? params.workspaceId : null
 
   const [recentDocs, setRecentDocs] = useState<{id: string, title: string}[]>([])
-  const [isCreating, setIsCreating] = useState(false)
+  const { isCreating, createDocument: handleCreateDocument } = useCreateDocument()
+
+  // Helper to match link path exactly or check sub-routes
+  const isLinkActive = (href: string) => {
+    if (pathname === href) return true
+    return pathname.startsWith(href + '/')
+  }
 
   // Fetch recent docs when workspaceId or pathname changes.
   // Uses AbortController for proper cleanup on unmount/re-render.
@@ -57,21 +62,13 @@ export function Sidebar() {
   }, [workspaceId, pathname])
 
   const handleCreateNew = async () => {
-    if (!workspaceId || isCreating) return
-    setIsCreating(true)
-    try {
-      const doc = await createDocument({
-        workspaceId,
-        title: 'Untitled',
-        type: 'doc',
-        status: 'draft'
-      })
-      router.push(`/workspace/${workspaceId}/documents/${doc.id}`)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setIsCreating(false)
-    }
+    if (!workspaceId) return
+    await handleCreateDocument({
+      workspaceId,
+      title: 'Untitled',
+      type: 'doc',
+      status: 'draft'
+    })
   }
 
   const navItems = [
@@ -124,7 +121,7 @@ export function Sidebar() {
 
         <div className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href)
+            const isActive = isLinkActive(item.href)
             return (
               <Link 
                 key={item.name} 
@@ -175,10 +172,27 @@ export function Sidebar() {
           <Sparkles className="w-4 h-4 transition-colors group-hover:animate-pulse" />
           <span className="font-sans text-sm font-medium">Soul Assistant</span>
         </button>
-        <Link href={workspaceId ? `/workspace/${workspaceId}/settings` : "/workspace"} className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all">
-          <Settings className="w-4 h-4" />
-          <span className="font-sans text-sm font-medium">Cài đặt</span>
-        </Link>
+        {(() => {
+          const settingsHref = workspaceId ? `/workspace/${workspaceId}/settings` : "/workspace"
+          const isSettingsActive = isLinkActive(settingsHref)
+          return (
+            <Link 
+              href={settingsHref} 
+              className={cn(
+                "w-full flex items-center space-x-3 px-3 py-2 rounded-lg font-sans text-sm transition-all duration-200 group",
+                isSettingsActive 
+                  ? "bg-surface-container-high dark:bg-surface-container text-on-surface font-semibold" 
+                  : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50"
+              )}
+            >
+              <Settings className={cn(
+                "w-4 h-4 transition-colors",
+                isSettingsActive ? "text-primary" : "group-hover:text-primary"
+              )} />
+              <span className="font-sans text-sm font-medium">Cài đặt</span>
+            </Link>
+          )
+        })()}
       </div>
     </aside>
   )

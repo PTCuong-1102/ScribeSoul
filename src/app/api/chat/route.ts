@@ -9,15 +9,34 @@ import { retrieveContext } from "@/lib/ai/retriever";
 import { AI_CONFIG } from "@/lib/ai/config";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
 
 export const maxDuration = 30;
+
+const chatSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(["user", "assistant", "system"]),
+    content: z.string().min(1, "Message content cannot be empty"),
+  })).min(1, "Messages cannot be empty"),
+  workspaceId: z.string().uuid(),
+  conversationId: z.string().uuid().optional(),
+});
 
 export async function POST(req: Request) {
   try {
     const { data: session } = await auth.getSession();
     if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
 
-    const { messages, workspaceId, conversationId } = await req.json();
+    const body = await req.json();
+    const parsed = chatSchema.safeParse(body);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: parsed.error.format() }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const { messages, workspaceId, conversationId } = parsed.data;
     const lastMessage = messages[messages.length - 1].content;
 
     // FIX 1: Verify workspace ownership before processing
@@ -100,34 +119,38 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages,
       onFinish: async ({ text, usage }) => {
-        // Save conversation and messages to DB
-        if (conversationId) {
-          // Save user message with zeroed usage (usage belongs to the response)
-          await db.insert(aiMessages).values([
-            {
-              conversationId: conversationId,
-              role: "user",
-              content: lastMessage,
-              tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-            },
-            {
-              conversationId: conversationId,
-              role: "assistant",
-              content: text,
-              citations: contextResults.map(r => ({ docId: r.docId, title: r.docTitle })),
-              // Store full token usage on the assistant message for accurate tracking
-              tokenUsage: {
-                promptTokens: usage.inputTokens ?? 0,
-                completionTokens: usage.outputTokens ?? 0,
-                totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+        try {
+          // Save conversation and messages to DB
+          if (conversationId) {
+            // Save user message with zeroed usage (usage belongs to the response)
+            await db.insert(aiMessages).values([
+              {
+                conversationId: conversationId,
+                role: "user",
+                content: lastMessage,
+                tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
               },
-            }
-          ]);
+              {
+                conversationId: conversationId,
+                role: "assistant",
+                content: text,
+                citations: contextResults.map(r => ({ docId: r.docId, title: r.docTitle })),
+                // Store full token usage on the assistant message for accurate tracking
+                tokenUsage: {
+                  promptTokens: usage.inputTokens ?? 0,
+                  completionTokens: usage.outputTokens ?? 0,
+                  totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+                },
+              }
+            ]);
 
-          // Update conversation updatedAt timestamp for sorting
-          await db.update(aiConversations)
-            .set({ updatedAt: new Date() })
-            .where(eq(aiConversations.id, conversationId));
+            // Update conversation updatedAt timestamp for sorting
+            await db.update(aiConversations)
+              .set({ updatedAt: new Date() })
+              .where(eq(aiConversations.id, conversationId));
+          }
+        } catch (dbError) {
+          console.error("[CHAT_ONFINISH_DB_ERROR] Failed to save chat logs:", dbError);
         }
       },
     });

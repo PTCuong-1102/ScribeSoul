@@ -75,7 +75,11 @@ function getAuth(): NeonAuth {
   const secret = process.env.NEON_AUTH_COOKIE_SECRET
 
   if (!baseUrl || !secret) {
-    if (process.env.NODE_ENV === 'production') {
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    const isVercel = process.env.VERCEL === '1'
+    const allowMockAuth = process.env.ALLOW_MOCK_AUTH === 'true' || (!isVercel && isDevelopment)
+
+    if (!allowMockAuth) {
       const { baseUrl: requiredBaseUrl, secret: requiredSecret } = getRequiredAuthEnv()
 
       _auth = createNeonAuth({
@@ -88,6 +92,11 @@ function getAuth(): NeonAuth {
       return _auth
     }
 
+    console.warn(
+      "⚠️ [WARN] Neon Auth is not configured. Running with MOCK LOCAL AUTH user dev@local.test.\n" +
+      "This configuration is ONLY intended for local development on localhost.\n" +
+      "To enable real authentication, set NEON_AUTH_BASE_URL and NEON_AUTH_COOKIE_SECRET."
+    )
     _auth = createDisabledAuth()
     return _auth
   }

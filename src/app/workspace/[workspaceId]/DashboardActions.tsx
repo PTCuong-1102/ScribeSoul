@@ -1,35 +1,21 @@
 "use client"
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React from 'react'
 import { Plus, Search } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { createDocument } from "@/server/actions/documents"
-
-import { toast } from 'sonner'
+import { useCreateDocument } from '@/hooks/use-create-document'
 
 export function DashboardActions({ workspaceId }: { workspaceId: string }) {
-  const router = useRouter()
-  const [isCreating, setIsCreating] = useState(false)
+  const { isCreating, createDocument: handleCreateNewDoc } = useCreateDocument()
 
   const handleCreateNew = async () => {
-    if (isCreating) return
-    setIsCreating(true)
-    try {
-      const doc = await createDocument({
-        workspaceId,
-        title: 'Untitled',
-        type: 'doc',
-        status: 'draft'
-      })
-      router.push(`/workspace/${workspaceId}/documents/${doc.id}`)
-      toast.success('Đã tạo bản thảo mới!')
-    } catch (e) {
-      console.error(e)
-      toast.error('Không thể tạo bản thảo mới. Vui lòng thử lại sau.')
-    } finally {
-      setIsCreating(false)
-    }
+    await handleCreateNewDoc({
+      workspaceId,
+      title: 'Untitled',
+      type: 'doc',
+      status: 'draft',
+      successMessage: 'Đã tạo bản thảo mới!'
+    })
   }
 
   const handleSearch = () => {

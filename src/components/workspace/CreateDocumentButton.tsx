@@ -1,9 +1,8 @@
 "use client"
 
-import React, { useState } from 'react'
+import React from 'react'
 import { Plus } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { createDocument } from '@/server/actions/documents'
+import { useCreateDocument } from '@/hooks/use-create-document'
 
 export function CreateDocumentButton({ 
   workspaceId, 
@@ -14,24 +13,16 @@ export function CreateDocumentButton({
   type: "doc" | "character" | "setting" | "plot"
   label: string 
 }) {
-  const router = useRouter()
-  const [isCreating, setIsCreating] = useState(false)
+  const { isCreating, createDocument: handleCreateNewDoc } = useCreateDocument()
 
   const handleCreate = async () => {
-    setIsCreating(true)
-    try {
-      const doc = await createDocument({
-        workspaceId,
-        title: `New ${label}`,
-        type,
-        status: 'idea'
-      })
-      router.push(`/workspace/${workspaceId}/documents/${doc.id}`)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setIsCreating(false)
-    }
+    await handleCreateNewDoc({
+      workspaceId,
+      title: `New ${label}`,
+      type,
+      status: 'idea',
+      successMessage: `Đã tạo ${label} mới!`
+    })
   }
 
   return (

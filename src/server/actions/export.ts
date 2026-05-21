@@ -13,6 +13,8 @@ interface BlockData {
   type: string;
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   content?: any;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  props?: any;
 }
 
 function blocksToMarkdown(documentBlocks: BlockData[]): string {
@@ -21,8 +23,12 @@ function blocksToMarkdown(documentBlocks: BlockData[]): string {
     const text = block.content?.map((c: any) => c.text || "").join('') || '';
     
     switch (block.type) {
-      case "heading":
-        return `## ${text}\n\n`;
+      case "heading": {
+        const level = typeof block.props === 'object' && block.props !== null && typeof block.props.level === 'number'
+          ? block.props.level
+          : 2;
+        return `${"#".repeat(level)} ${text}\n\n`;
+      }
       case "paragraph":
         return `${text}\n\n`;
       case "bulletListItem":
@@ -53,7 +59,7 @@ export async function exportDocumentAsMarkdown(documentId: string) {
 
   const content = blocksToMarkdown(docBlocks);
   const frontmatter = `---
-title: ${doc.title}
+title: ${JSON.stringify(doc.title)}
 type: ${doc.type}
 status: ${doc.status}
 date: ${doc.updatedAt.toISOString()}

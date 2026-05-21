@@ -43,11 +43,17 @@ export async function triggerIngest(
   baseUrl: string = process.env.NEXTAUTH_URL || "http://localhost:3000"
 ) {
   try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+
+    if (process.env.INTERNAL_API_SECRET) {
+      headers["Authorization"] = `Bearer ${process.env.INTERNAL_API_SECRET}`
+    }
+
     const response = await fetch(`${baseUrl}/api/ingest`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({ documentId }),
     })
 

@@ -3,9 +3,10 @@ import { auth } from "@/lib/auth/server"
 import { db } from "@/lib/db"
 import { blocks } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
-import { eq, and, inArray } from "drizzle-orm"
+import { eq, and, inArray, sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import crypto from "crypto"
 
 const syncSchema = z.object({
   documentId: z.string().uuid(),
@@ -52,42 +53,29 @@ export async function POST(req: Request) {
       // 2. For items with IDs, delete all existing and re-insert in bulk
       //    This avoids N+1 SELECT+UPDATE pattern and handles both insert/update cases
       if (validated.upsert.length > 0) {
-        const itemsWithId = validated.upsert.filter(item => item.id)
-        const itemsWithoutId = validated.upsert.filter(item => !item.id)
-
-        // Delete existing blocks for this document that match incoming IDs,
-        // then re-insert them with updated data
-        if (itemsWithId.length > 0) {
-          const existingIds = itemsWithId.map(item => item.id as string)
-          await tx.delete(blocks)
-            .where(and(
-              eq(blocks.documentId, validated.documentId),
-              inArray(blocks.id, existingIds)
-            ))
-        }
-
-        // Bulk insert all items (both with and without explicit IDs)
-        const allValues = [
-          ...itemsWithId.map(item => ({
-            id: item.id,
-            documentId: validated.documentId,
-            type: item.type,
-            content: item.content,
-            sortOrder: item.sortOrder,
-            parentBlockId: item.parentBlockId,
-            updatedAt: new Date(),
-          })),
-          ...itemsWithoutId.map(item => ({
-            documentId: validated.documentId,
-            type: item.type,
-            content: item.content,
-            sortOrder: item.sortOrder,
-            parentBlockId: item.parentBlockId,
-          })),
-        ]
+        const allValues = validated.upsert.map(item => ({
+          id: item.id || crypto.randomUUID(),
+          documentId: validated.documentId,
+          type: item.type,
+          content: item.content,
+          sortOrder: item.sortOrder,
+          parentBlockId: item.parentBlockId,
+          updatedAt: new Date(),
+        }))
 
         if (allValues.length > 0) {
-          await tx.insert(blocks).values(allValues)
+          await tx.insert(blocks)
+            .values(allValues)
+            .onConflictDoUpdate({
+              target: blocks.id,
+              set: {
+                type: sql`excluded.type`,
+                content: sql`excluded.content`,
+                sortOrder: sql`excluded.sort_order`,
+                parentBlockId: sql`excluded.parent_block_id`,
+                updatedAt: sql`excluded.updated_at`,
+              }
+            })
         }
       }
     })

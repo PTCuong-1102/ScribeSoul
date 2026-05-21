@@ -5,6 +5,7 @@ import {
   primaryKey,
   integer,
   uuid,
+  jsonb,
 } from "drizzle-orm/pg-core"
 
 export const users = pgTable("user", {
@@ -14,6 +15,7 @@ export const users = pgTable("user", {
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
   plan: text("plan", { enum: ["free", "pro", "team"] }).default("free"),
+  aiPreferences: jsonb("ai_preferences").default({}).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })

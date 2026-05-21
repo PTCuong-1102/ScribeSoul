@@ -4,6 +4,8 @@ import * as workspacesSchema from "./workspaces"
 import * as documentsSchema from "./documents"
 import * as blocksSchema from "./blocks"
 import * as aiSchema from "./ai"
+import * as linksSchema from "./links"
+
 
 export * from "./users"
 export * from "./workspaces"
@@ -38,6 +40,8 @@ export const documentRelations = relations(documentsSchema.documents, ({ one, ma
   }),
   children: many(documentsSchema.documents, { relationName: "document_tree" }),
   blocks: many(blocksSchema.blocks),
+  outgoingLinks: many(linksSchema.documentLinks, { relationName: "link_source" }),
+  incomingLinks: many(linksSchema.documentLinks, { relationName: "link_target" }),
 }))
 
 export const blockRelations = relations(blocksSchema.blocks, ({ one }) => ({
@@ -59,5 +63,18 @@ export const messageRelations = relations(aiSchema.aiMessages, ({ one }) => ({
   conversation: one(aiSchema.aiConversations, {
     fields: [aiSchema.aiMessages.conversationId],
     references: [aiSchema.aiConversations.id],
+  }),
+}))
+
+export const documentLinkRelations = relations(linksSchema.documentLinks, ({ one }) => ({
+  source: one(documentsSchema.documents, {
+    fields: [linksSchema.documentLinks.sourceId],
+    references: [documentsSchema.documents.id],
+    relationName: "link_source",
+  }),
+  target: one(documentsSchema.documents, {
+    fields: [linksSchema.documentLinks.targetId],
+    references: [documentsSchema.documents.id],
+    relationName: "link_target",
   }),
 }))

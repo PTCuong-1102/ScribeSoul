@@ -17,6 +17,7 @@ export function extractLinks(blocks: unknown[]): ExtractedLink[] {
 
     if (typeof obj === 'string') {
       let match;
+      linkRegex.lastIndex = 0;
       while ((match = linkRegex.exec(obj)) !== null) {
         const content = match[1];
         if (content.includes('|')) {

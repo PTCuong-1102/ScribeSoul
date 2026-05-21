@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import { Search, FileText, Sparkles, Command, ChevronRight } from "lucide-react"
 import { semanticSearch } from "@/server/actions/search"
 import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 export function CommandSearch({ workspaceId }: { workspaceId: string }) {
   const router = useRouter()
@@ -17,24 +18,52 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
   }
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
-  // Toggle Command Palette
+
+
+  const handleSelect = useCallback((docId: string) => {
+    setOpen(false)
+    router.push(`/workspace/${workspaceId}/documents/${docId}`)
+  }, [workspaceId, router])
+
+  // Toggle Command Palette and keyboard navigation
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         setOpen((open) => !open)
+        return
+      }
+
+      if (open) {
+        if (e.key === "Escape") {
+          e.preventDefault()
+          setOpen(false)
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault()
+          setSelectedIndex((prev) => (results.length > 0 ? (prev + 1) % results.length : 0))
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault()
+          setSelectedIndex((prev) => (results.length > 0 ? (prev - 1 + results.length) % results.length : 0))
+        } else if (e.key === "Enter") {
+          if (results.length > 0 && results[selectedIndex]) {
+            e.preventDefault()
+            handleSelect(results[selectedIndex].docId)
+          }
+        }
       }
     }
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
-  }, [])
+  }, [open, results, selectedIndex, handleSelect])
 
   // Use a ref for the timeout to handle debouncing
   const searchTimeout = React.useRef<NodeJS.Timeout | null>(null)
 
   const handleSearch = useCallback((val: string) => {
     setQuery(val)
+    setSelectedIndex(0)
     if (val.length < 2) {
       setResults([])
       return
@@ -47,6 +76,7 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
       try {
         const searchResults = await semanticSearch(workspaceId, val)
         setResults(searchResults)
+        setSelectedIndex(0)
       } catch (e) {
         console.error(e)
       } finally {
@@ -54,11 +84,6 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
       }
     }, 400) // 400ms debounce
   }, [workspaceId])
-
-  const handleSelect = (docId: string) => {
-    setOpen(false)
-    router.push(`/workspace/${workspaceId}/documents/${docId}`)
-  }
 
   if (!open) return null
 
@@ -94,11 +119,16 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
 
           {!loading && results.length > 0 && (
             <div className="space-y-1">
-              {results.map((r) => (
+              {results.map((r, idx) => (
                 <button 
                   key={r.id}
                   onClick={() => handleSelect(r.docId)}
-                  className="w-full text-left p-4 rounded-xl hover:bg-surface-container-high transition-all group flex items-start space-x-4 border border-transparent hover:border-border/5"
+                  className={cn(
+                    "w-full text-left p-4 rounded-xl transition-all group flex items-start space-x-4 border",
+                    selectedIndex === idx
+                      ? "bg-surface-container-high border-secondary/20 shadow-sm"
+                      : "border-transparent hover:bg-surface-container-high hover:border-border/5"
+                  )}
                 >
                   <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
                     <FileText className="w-5 h-5" />
