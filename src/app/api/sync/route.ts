@@ -15,8 +15,8 @@ const syncSchema = z.object({
   documentId: z.string().uuid(),
   upsert: z.array(z.object({
     id: z.string().uuid().optional(),
-    type: z.string(),
-    content: z.any(),
+    type: z.string().max(100, "Block type too long"),
+    content: z.record(z.string(), z.unknown()).optional().default({}),
     sortOrder: z.number(),
     parentBlockId: z.string().uuid().optional().nullable(),
   })).max(1000, "Quá nhiều blocks để đồng bộ (tối đa 1000)"),

@@ -33,10 +33,14 @@ export default async function DocumentPage({ params }: { params: Promise<{ works
   // Reconstruct tree structure from flat list of blocks ordered by sortOrder
   const initialContent = doc.blocks.length > 0 
     ? (() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const blockMap = new Map<string, any>()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const roots: any[] = []
+        interface BlockNode {
+          id: string;
+          type: string;
+          content: unknown;
+          children: BlockNode[];
+        }
+        const blockMap = new Map<string, BlockNode>()
+        const roots: BlockNode[] = []
 
         // 1. Map each block to BlockNote PartialBlock format
         doc.blocks.forEach((b: Record<string, unknown>) => {
@@ -51,14 +55,14 @@ export default async function DocumentPage({ params }: { params: Promise<{ works
         // 2. Link children to their parent, preserve roots
         doc.blocks.forEach((b: Record<string, unknown>) => {
           const node = blockMap.get(b.id as string)
-          if (b.parentBlockId && blockMap.has(b.parentBlockId as string)) {
-            blockMap.get(b.parentBlockId as string).children.push(node)
-          } else {
+          if (node && b.parentBlockId && blockMap.has(b.parentBlockId as string)) {
+            blockMap.get(b.parentBlockId as string)!.children.push(node)
+          } else if (node) {
             roots.push(node)
           }
         })
 
-        return roots as PartialBlock[]
+        return roots as unknown as PartialBlock[]
       })()
     : undefined
 

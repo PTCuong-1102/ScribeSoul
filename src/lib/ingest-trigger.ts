@@ -23,9 +23,6 @@ export async function queueDocumentIngest(documentId: string) {
       return false
     }
 
-    // In production, this should use a job queue (Bull, Inngest, etc)
-    // For now, we'll just log and return true
-    // The actual ingest will be triggered via the /api/ingest endpoint
     console.log(`[INGEST] Queued document for ingestion: ${documentId}`)
 
     return true
@@ -40,7 +37,7 @@ export async function queueDocumentIngest(documentId: string) {
  */
 export async function triggerIngest(
   documentId: string,
-  baseUrl: string = process.env.NEXTAUTH_URL || "http://localhost:3000"
+  baseUrl: string = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000"
 ) {
   try {
     const headers: Record<string, string> = {

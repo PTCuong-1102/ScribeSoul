@@ -108,6 +108,7 @@ export function Sidebar() {
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         <div className="mb-4">
           <button 
+            aria-label="Mở tìm kiếm (Cmd+K)"
             onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
             className="w-full flex items-center justify-between px-3 py-2 text-on-surface-variant hover:text-on-surface transition-colors group"
           >
@@ -126,6 +127,7 @@ export function Sidebar() {
               <Link 
                 key={item.name} 
                 href={item.href}
+                aria-label={`Điều hướng đến ${item.name}`}
                 className={cn(
                   "flex items-center space-x-3 px-3 py-2 rounded-lg font-sans text-sm transition-all duration-200 group",
                   isActive 
@@ -153,7 +155,7 @@ export function Sidebar() {
             {recentDocs.length === 0 ? (
                <p className="px-2 text-xs text-on-surface-variant font-sans italic opacity-50">Trống</p>
             ) : recentDocs.map(doc => (
-              <Link key={doc.id} href={workspaceId ? `/workspace/${workspaceId}/documents/${doc.id}` : "/workspace"} className="w-full flex items-center space-x-2 px-2 py-1.5 rounded-md hover:bg-surface-container-high/40 transition-all group">
+              <Link key={doc.id} href={workspaceId ? `/workspace/${workspaceId}/documents/${doc.id}` : "/workspace"} aria-label={`Mở tài liệu ${doc.title}`} className="w-full flex items-center space-x-2 px-2 py-1.5 rounded-md hover:bg-surface-container-high/40 transition-all group">
                 <ChevronRight className="w-3 h-3 text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity" />
                 <span className="font-sans text-sm text-on-surface-variant group-hover:text-on-surface truncate">{doc.title}</span>
               </Link>
@@ -164,6 +166,7 @@ export function Sidebar() {
 
       <div className="p-4 space-y-1 border-t border-border/5">
         <button 
+          aria-label="Mở Soul Assistant"
           onClick={() => {
             window.dispatchEvent(new CustomEvent('toggle-soul-assistant'))
           }}
@@ -177,7 +180,8 @@ export function Sidebar() {
           const isSettingsActive = isLinkActive(settingsHref)
           return (
             <Link 
-              href={settingsHref} 
+              href={settingsHref}
+              aria-label="Cài đặt"
               className={cn(
                 "w-full flex items-center space-x-3 px-3 py-2 rounded-lg font-sans text-sm transition-all duration-200 group",
                 isSettingsActive 

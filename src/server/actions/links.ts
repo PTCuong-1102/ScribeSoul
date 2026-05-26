@@ -45,6 +45,7 @@ export async function getBacklinks(documentId: string): Promise<BacklinkResult[]
 
 export async function createLink(sourceId: string, targetId: string, type: "mention" | "reference" | "plot-link" | "character-link" = "mention") {
   if (!await validateDocumentOwner(sourceId)) throw new Error("Unauthorized")
+  if (!await validateDocumentOwner(targetId)) throw new Error("Unauthorized")
 
   return db.insert(documentLinks)
     .values({
@@ -61,6 +62,7 @@ export async function createLink(sourceId: string, targetId: string, type: "ment
 
 export async function deleteLink(sourceId: string, targetId: string) {
   if (!await validateDocumentOwner(sourceId)) throw new Error("Unauthorized")
+  if (!await validateDocumentOwner(targetId)) throw new Error("Unauthorized")
 
   return db.delete(documentLinks)
     .where(and(

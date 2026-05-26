@@ -242,7 +242,7 @@ export async function getRecentDocuments(workspaceId: string, limit: number = 5)
   })
 }
 
-export async function getDocumentsByType(workspaceId: string, type: "character" | "setting" | "plot") {
+export async function getDocumentsByType(workspaceId: string, type: z.infer<typeof documentSchema.shape.type>) {
   await checkWorkspaceOwnership(workspaceId)
   
   return db.query.documents.findMany({

@@ -31,6 +31,7 @@ export function TopBar() {
           <Button 
             variant="ghost" 
             size="icon" 
+            aria-label="Chế độ sáng"
             className={theme === 'light' ? 'bg-surface-container-lowest shadow-sm rounded-full' : 'rounded-full text-on-surface-variant'}
             onClick={() => setTheme('light')}
           >
@@ -39,6 +40,7 @@ export function TopBar() {
           <Button 
             variant="ghost" 
             size="icon" 
+            aria-label="Chế độ tối"
             className={theme === 'dark' ? 'bg-surface-container-highest shadow-sm rounded-full' : 'rounded-full text-on-surface-variant'}
             onClick={() => setTheme('dark')}
           >
@@ -46,14 +48,14 @@ export function TopBar() {
           </Button>
         </div>
 
-        <Button variant="ghost" size="icon" className="text-on-surface-variant hover:text-on-surface">
+        <Button variant="ghost" size="icon" aria-label="Thông báo" className="text-on-surface-variant hover:text-on-surface">
           <Bell className="w-4 h-4" />
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" size="icon" className="rounded-full bg-surface-container-low dark:bg-surface-container border border-border/5">
+              <Button variant="ghost" size="icon" aria-label="Menu người dùng" className="rounded-full bg-surface-container-low dark:bg-surface-container border border-border/5">
                 <User className="w-4 h-4 text-on-surface" />
               </Button>
             }

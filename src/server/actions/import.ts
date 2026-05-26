@@ -3,6 +3,8 @@
 import { db } from "@/lib/db"
 import { blocks } from "@/lib/db/schema/blocks"
 import { createDocument } from "./documents"
+import { auth } from "@/lib/auth/server"
+import { z } from "zod"
 
 interface InlineContent {
   type: "text";
@@ -12,6 +14,12 @@ interface InlineContent {
     italic?: boolean;
   };
 }
+
+const importSchema = z.object({
+  workspaceId: z.string().uuid(),
+  title: z.string().min(1, "Tiêu đề không được để trống").max(200),
+  markdown: z.string().max(500000, "Markdown content too large"),
+})
 
 function parseInlineStyles(text: string): InlineContent[] {
   const regex = /(\*\*.*?\*\*|\*.*?\*|_.*?_)/g;
@@ -118,16 +126,21 @@ function markdownToBlocks(markdown: string): MarkdownBlock[] {
 }
 
 export async function importMarkdown(workspaceId: string, title: string, markdown: string) {
+  const { data: session } = await auth.getSession()
+  if (!session?.user?.id) throw new Error("Unauthorized")
+
+  const validated = importSchema.parse({ workspaceId, title, markdown })
+
   const newDoc = await createDocument({
-    workspaceId,
-    title,
+    workspaceId: validated.workspaceId,
+    title: validated.title,
     type: "doc",
     status: "draft",
     parentId: null,
     metadata: {}
   });
 
-  const importedBlocks = markdownToBlocks(markdown);
+  const importedBlocks = markdownToBlocks(validated.markdown);
   
   if (importedBlocks.length > 0) {
     await db.insert(blocks).values(

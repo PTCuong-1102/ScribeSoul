@@ -44,7 +44,7 @@ export async function createConversation(workspaceId: string, title?: string) {
     .values({
       userId,
       workspaceId,
-      title: title || "Cuộc trò chuyện mới",
+      title: title?.substring(0, 200) || "Cuộc trò chuyện mới",
       contextType: "full-project",
     })
     .returning()

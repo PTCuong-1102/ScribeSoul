@@ -69,7 +69,7 @@ export function SettingsPageClient() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
         {/* Navigation */}
-        <nav className="space-y-2">
+        <nav role="tablist" className="space-y-2">
           {[
             { id: 'profile', label: 'Hồ sơ', icon: User },
             { id: 'appearance', label: 'Giao diện', icon: Moon },
@@ -77,10 +77,13 @@ export function SettingsPageClient() {
             { id: 'notifications', label: 'Thông báo', icon: Bell },
             { id: 'security', label: 'Bảo mật', icon: Shield },
           ].map((item) => (
-            <button 
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={cn(
+              <button 
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                aria-label={`Tab ${item.label}`}
+                role="tab"
+                aria-selected={activeTab === item.id}
+                className={cn(
                 "w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-sm font-sans transition-all group",
                 activeTab === item.id 
                   ? "bg-surface-container-high text-primary font-medium" 
@@ -105,20 +108,22 @@ export function SettingsPageClient() {
         {/* Content */}
         <div className="md:col-span-3 space-y-12">
           {activeTab === 'profile' && (
-            <section className="space-y-6">
+            <section role="tabpanel" className="space-y-6">
               <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Thông tin cá nhân</h3>
               <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Tên hiển thị</label>
-                  <Input 
+                  <label htmlFor="display-name" className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Tên hiển thị</label>
+                  <Input
+                    id="display-name"
                     value={name} 
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                     className="bg-surface-container-lowest border-border/10 rounded-xl font-serif text-lg py-6 focus:ring-secondary/20" 
                   />
                 </div>
                 <div className="space-y-2 opacity-60">
-                  <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Email (Liên kết)</label>
-                  <Input 
+                  <label htmlFor="email-display" className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Email (Liên kết)</label>
+                  <Input
+                    id="email-display"
                     value={(user?.email as string) || ""} 
                     disabled
                     className="bg-surface-container-low border-border/10 rounded-xl font-serif text-lg py-6"
@@ -129,7 +134,7 @@ export function SettingsPageClient() {
           )}
 
           {activeTab === 'appearance' && (
-            <section className="space-y-6">
+            <section role="tabpanel" className="space-y-6">
               <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Chủ đề & Giao diện</h3>
               <div className="grid grid-cols-3 gap-4">
                 {[
@@ -140,6 +145,8 @@ export function SettingsPageClient() {
                   <button
                     key={t.id}
                     onClick={() => setTheme(t.id)}
+                    aria-label={`Chủ đề ${t.label}`}
+                    aria-pressed={theme === t.id}
                     className={cn(
                       "flex flex-col items-center justify-center p-6 rounded-2xl border transition-all space-y-3 group",
                       theme === t.id 
@@ -159,7 +166,7 @@ export function SettingsPageClient() {
           )}
 
           {activeTab === 'ai' && (
-            <section className="space-y-6">
+            <section role="tabpanel" className="space-y-6">
               <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Thiết lập Trợ lý AI</h3>
               <div className="space-y-6">
                 <div className="p-6 rounded-2xl bg-surface-container-low border border-border/10 flex items-center justify-between">
@@ -175,8 +182,9 @@ export function SettingsPageClient() {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Mô hình AI ưu tiên</label>
+                      <label htmlFor="ai-model-select" className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Mô hình AI ưu tiên</label>
                     <select
+                      id="ai-model-select"
                       value={aiModel}
                       onChange={(e) => setAiModel(e.target.value)}
                       className="w-full bg-surface-container-lowest border border-border/10 rounded-xl p-4 font-sans text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/20"
@@ -188,7 +196,7 @@ export function SettingsPageClient() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Độ sáng tạo (Creativity)</label>
+                    <label htmlFor="creativity-select" className="text-xs font-sans uppercase tracking-widest text-on-surface-variant font-medium">Độ sáng tạo (Creativity)</label>
                     <div className="grid grid-cols-3 gap-3">
                       {[
                         { id: 'low', label: 'Nhất quán (Low)' },
@@ -216,14 +224,14 @@ export function SettingsPageClient() {
           )}
 
           {activeTab === 'notifications' && (
-            <section className="space-y-6">
+            <section role="tabpanel" className="space-y-6">
               <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Thông báo</h3>
               <p className="text-sm font-sans text-on-surface-variant italic">Tính năng quản lý thông báo đang được phát triển.</p>
             </section>
           )}
 
           {activeTab === 'security' && (
-            <section className="space-y-6">
+            <section role="tabpanel" className="space-y-6">
               <h3 className="text-lg font-serif text-on-surface border-b border-border/5 pb-2">Bảo mật</h3>
               <p className="text-sm font-sans text-on-surface-variant italic">Tính năng quản lý bảo mật đang được phát triển.</p>
             </section>

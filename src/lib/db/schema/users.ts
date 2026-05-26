@@ -6,6 +6,7 @@ import {
   integer,
   uuid,
   jsonb,
+  index,
 } from "drizzle-orm/pg-core"
 
 export const users = pgTable("user", {
@@ -41,6 +42,7 @@ export const accounts = pgTable(
     compoundKey: primaryKey({
       columns: [account.provider, account.providerAccountId],
     }),
+    accountUserIdIdx: index("account_user_id_idx").on(account.userId),
   })
 )
 
@@ -50,7 +52,9 @@ export const sessions = pgTable("session", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
-})
+}, (table) => ({
+  sessionUserIdIdx: index("session_user_id_idx").on(table.userId),
+}))
 
 export const verificationTokens = pgTable(
   "verificationToken",

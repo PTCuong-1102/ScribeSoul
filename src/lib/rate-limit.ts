@@ -10,6 +10,9 @@ function createLimiter(points: number, duration: SlidingWindowDuration) {
   if (cached) return cached
 
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[RATE_LIMIT] Upstash not configured — rate limiting disabled in production!')
+    }
     return null
   }
 

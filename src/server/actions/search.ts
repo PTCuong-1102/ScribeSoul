@@ -37,12 +37,9 @@ export async function semanticSearch(workspaceId: string, query: string) {
       score: r.score
     }))
   } catch (error) {
-    console.error("Semantic search error:", error)
-    // FIX 4: Return error info instead of silent failure
     if (error instanceof Error && error.message === "Workspace not found or unauthorized") {
-      throw new Error("Workspace not found or unauthorized")
+      throw error
     }
-    // Only return empty for actual "no results", re-throw auth errors
     throw error
   }
 }
@@ -52,7 +49,6 @@ export async function getKnowledgeGraph(workspaceId: string) {
   if (!session?.user?.id) throw new Error("Unauthorized")
 
   try {
-    // FIX 1: Verify workspace ownership before querying
     const workspace = await db.query.workspaces.findFirst({
       where: and(
         eq(workspaces.id, workspaceId),
@@ -64,7 +60,6 @@ export async function getKnowledgeGraph(workspaceId: string) {
       throw new Error("Workspace not found or unauthorized")
     }
 
-    // Fetch documents as nodes
     const docs = await db.query.documents.findMany({
       where: eq(documents.workspaceId, workspaceId),
       columns: {
@@ -87,11 +82,10 @@ export async function getKnowledgeGraph(workspaceId: string) {
         }
       })
       
-      // Map to the format expected by the frontend graph (usually source, target, label/type)
       links = dbLinks.map(l => ({
         source: l.sourceId,
         target: l.targetId,
-        label: l.type // Optional label depending on the library
+        label: l.type
       }))
     }
 
@@ -104,8 +98,6 @@ export async function getKnowledgeGraph(workspaceId: string) {
       links
     }
   } catch (error) {
-    console.error("Knowledge graph error:", error)
-    // FIX 4: Re-throw auth errors instead of silent failure
     if (error instanceof Error && error.message.includes("Workspace not found")) {
       throw error
     }

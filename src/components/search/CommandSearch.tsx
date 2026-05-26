@@ -60,6 +60,12 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
   // Use a ref for the timeout to handle debouncing
   const searchTimeout = React.useRef<NodeJS.Timeout | null>(null)
 
+  useEffect(() => {
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    }
+  }, [])
+
   const handleSearch = useCallback((val: string) => {
     setQuery(val)
     setSelectedIndex(0)
