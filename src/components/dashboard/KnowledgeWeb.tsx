@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useRef, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { getKnowledgeGraph } from "@/server/actions/search"
 import { Sparkles, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -26,12 +27,17 @@ const KINETIC_ENERGY_THRESHOLD = 0.1
 const MAX_SIMULATION_TICKS = 300
 
 export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
+  const router = useRouter()
   const [nodes, setNodes] = useState<Node[]>([])
   const [links, setLinks] = useState<Link[]>([])
   const [loading, setLoading] = useState(true)
   const svgRef = useRef<SVGSVGElement>(null)
   const tickCountRef = useRef(0)
   const isSimulatingRef = useRef(false)
+
+  const handleNodeClick = useCallback((nodeId: string) => {
+    router.push(`/workspace/${workspaceId}/documents/${nodeId}`)
+  }, [router, workspaceId])
 
   useEffect(() => {
     async function loadData() {
@@ -157,20 +163,29 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
 
         {/* Draw Nodes */}
         {nodes.map(node => (
-          <g key={node.id} transform={`translate(${node.x},${node.y})`}>
+          <g
+            key={node.id}
+            transform={`translate(${node.x},${node.y})`}
+            onClick={() => handleNodeClick(node.id)}
+            className="cursor-pointer"
+            role="link"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleNodeClick(node.id) }}
+          >
+            <title>{node.label}</title>
             {/* Glow */}
             <circle r="12" className="fill-secondary/20 blur-md animate-pulse" />
-            <circle 
-              r="6" 
+            <circle
+              r="6"
               className={cn(
-                "fill-surface-container-highest stroke-2 transition-all duration-300",
+                "fill-surface-container-highest stroke-2 transition-all duration-300 hover:stroke-[3]",
                 node.type === "character" ? "stroke-primary" : "stroke-secondary"
-              )} 
+              )}
             />
-            <text 
-              dy="20" 
-              textAnchor="middle" 
-              className="text-[10px] font-sans fill-on-surface-variant/60 select-none pointer-events-none uppercase tracking-tighter"
+            <text
+              dy="20"
+              textAnchor="middle"
+              className="text-[10px] font-sans fill-on-surface-variant/60 select-none uppercase tracking-tighter"
             >
               {node.label}
             </text>

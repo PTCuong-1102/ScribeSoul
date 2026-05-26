@@ -7,6 +7,7 @@ import { eq, and, inArray, sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import crypto from "crypto"
+import { ingestDocument } from "@/lib/ai/ingest"
 
 const syncSchema = z.object({
   documentId: z.string().uuid(),
@@ -84,6 +85,12 @@ export async function POST(req: Request) {
     await db.update(documents)
       .set({ updatedAt: new Date() })
       .where(eq(documents.id, validated.documentId))
+
+    // Auto-trigger ingestion (fire-and-forget to avoid blocking the sync response).
+    // This ensures the RAG pipeline runs even if the client disconnects.
+    ingestDocument(validated.documentId).catch(err => {
+      console.error("[SYNC_INGEST_ERROR] Failed to ingest after sync:", err)
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

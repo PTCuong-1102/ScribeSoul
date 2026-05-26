@@ -1,13 +1,10 @@
 export const dynamic = 'force-dynamic'
 import { auth } from "@/lib/auth/server"
-import { db } from "@/lib/db"
-import { documentChunks, chunkEmbeddings } from "@/lib/db/schema/ai"
-import { blocks as blocksTable } from "@/lib/db/schema/blocks"
+import { ingestDocument } from "@/lib/ai/ingest"
 import { documents } from "@/lib/db/schema/documents"
-import { eq, asc } from "drizzle-orm"
+import { eq } from "drizzle-orm"
+import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
-import { chunkBlocks } from "@/lib/ai/chunker"
-import { generateEmbeddings } from "@/lib/ai/embedder"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { z } from "zod"
 
@@ -33,11 +30,11 @@ export async function POST(req: Request) {
       where: eq(documents.id, documentId),
       with: { workspace: true }
     })
-    
+
     if (!doc) {
       return new NextResponse("Document Not Found", { status: 404 })
     }
-    
+
     if (session?.user?.id && doc.workspace.ownerId !== session.user.id) {
       return new NextResponse("Forbidden", { status: 403 })
     }
@@ -66,51 +63,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // Get current blocks
-    const currentBlocks = await db.query.blocks.findMany({
-      where: eq(blocksTable.documentId, documentId),
-      orderBy: [asc(blocksTable.sortOrder)]
-    })
+    const result = await ingestDocument(documentId)
 
-    if (currentBlocks.length === 0) return NextResponse.json({ success: true, message: "No content to ingest" })
-
-    // 1. Chunking
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chunks = chunkBlocks(documentId, currentBlocks as any)
-
-    // 2. Generate Embeddings
-    const embeddingResults = await generateEmbeddings(chunks.map(c => c.content))
-
-    // 3. Clear old chunks for this document and insert new ones in bulk (Transaction)
-    await db.transaction(async (tx) => {
-      // Drizzle doesn't have a direct "cascade delete" in simple way for transactions 
-      // without relations setup in DB, but we do it manually here.
-      await tx.delete(documentChunks).where(eq(documentChunks.documentId, documentId))
-      
-      if (chunks.length > 0) {
-        // Bulk insert all chunks at once and return their new IDs
-        const newChunks = await tx.insert(documentChunks).values(
-          chunks.map(chunk => ({
-            documentId: chunk.metadata.docId,
-            content: chunk.content,
-            metadata: { blockIds: chunk.metadata.blockIds }
-          }))
-        ).returning()
-
-        // Build the embedding rows matching the newly inserted chunks
-        const embeddingValues = newChunks.map((newChunk, i) => ({
-          chunkId: newChunk.id,
-          embedding: embeddingResults[i]
-        }))
-
-        // Bulk insert all embeddings at once
-        if (embeddingValues.length > 0) {
-          await tx.insert(chunkEmbeddings).values(embeddingValues)
-        }
-      }
-    })
-
-    return NextResponse.json({ success: true, count: chunks.length })
+    return NextResponse.json({ success: result.success, count: result.count })
   } catch (error) {
     console.error("[INGEST_ERROR]", error)
     return new NextResponse("Internal Error", { status: 500 })

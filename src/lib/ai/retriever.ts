@@ -23,24 +23,24 @@ export async function retrieveContext(
 ): Promise<RetrievalResult[]> {
   const queryEmbedding = await generateEmbedding(query);
   
-  // Use parameterized query for the vector embedding to prevent SQL injection.
-  // Convert the embedding array to a SQL-safe string literal via a parameter,
-  // then cast it to vector type on the database side.
-  const embeddingParam = `[${queryEmbedding.join(',')}]`;
+  // Convert embedding array to pgvector-compatible string format.
+  // Passed as a parameterized value via Drizzle sql template (${embeddingStr}::vector),
+  // which sends it as a bind parameter ($N::vector) instead of interpolating into SQL text,
+  // preventing SQL injection.
+  const embeddingStr = `[${queryEmbedding.join(',')}]`;
 
-  // Build scope filter: if documentIds are provided, restrict search to those docs
+  // Build scope filter: if documentIds are provided, restrict search to those docs.
+  // Each id is passed as a parameterized value via sql template literal.
   const scopeFilter = scope?.documentIds && scope.documentIds.length > 0
-    ? sql` AND ${documents.id} IN (${sql.join(scope.documentIds.map(id => sql`${id}`), sql`, `)})`
+    ? sql`AND ${documents.id} IN (${sql.join(scope.documentIds.map(id => sql`${id}`), sql`, `)})`
     : sql``;
 
-  // SQL for cosine similarity: 1 - (vec1 <=> vec2)
-  // we use <=> which is cosine distance
   const results = await db.execute(sql`
     SELECT 
       ${documentChunks.content},
-      ${documents.title} as doc_title,
-      ${documents.id} as doc_id,
-      1 - (ce.embedding <=> ${embeddingParam}::vector) as similarity
+      ${documents.title} AS doc_title,
+      ${documents.id} AS doc_id,
+      1 - (ce.embedding <=> ${embeddingStr}::vector) AS similarity
     FROM ${documentChunks}
     JOIN ${documents} ON ${documentChunks.documentId} = ${documents.id}
     JOIN ${chunkEmbeddings} ce ON ce.chunk_id = ${documentChunks.id}

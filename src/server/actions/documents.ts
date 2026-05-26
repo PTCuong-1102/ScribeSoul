@@ -57,7 +57,7 @@ function toLocalDayKey(date: Date, timezone?: string) {
       day: '2-digit',
     })
     return formatter.format(date) // "YYYY-MM-DD"
-  } catch (e) {
+  } catch {
     const yyyy = date.getFullYear()
     const mm = String(date.getMonth() + 1).padStart(2, "0")
     const dd = String(date.getDate()).padStart(2, "0")
@@ -157,16 +157,23 @@ export async function getDocument(id: string) {
 }
 
 export async function updateDocument(id: string, data: Partial<z.infer<typeof documentSchema>>) {
+  const userId = await requireAuth()
+
   const existing = await db.query.documents.findFirst({
     where: eq(documents.id, id),
+    columns: { id: true, workspaceId: true },
   })
   if (!existing) throw new Error("Document không tồn tại")
-  
-  await checkWorkspaceOwnership(existing.workspaceId)
+
+  const workspace = await db.query.workspaces.findFirst({
+    where: and(eq(workspaces.id, existing.workspaceId), eq(workspaces.ownerId, userId)),
+  })
+  if (!workspace) throw new Error("Không có quyền truy cập workspace này")
 
   // Validate partial data and strip workspaceId to prevent IDOR workspace switching
   const validated = documentSchema.partial().parse(data)
-  const { workspaceId: _, ...updateFields } = validated
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { workspaceId, ...updateFields } = validated
 
   const [updated] = await db
     .update(documents)
@@ -182,15 +189,21 @@ export async function updateDocument(id: string, data: Partial<z.infer<typeof do
 }
 
 export async function deleteDocument(id: string) {
+  const userId = await requireAuth()
+
   const existing = await db.query.documents.findFirst({
     where: eq(documents.id, id),
+    columns: { id: true, workspaceId: true },
   })
   if (!existing) return
 
-  await checkWorkspaceOwnership(existing.workspaceId)
+  const workspace = await db.query.workspaces.findFirst({
+    where: and(eq(workspaces.id, existing.workspaceId), eq(workspaces.ownerId, userId)),
+  })
+  if (!workspace) throw new Error("Không có quyền truy cập workspace này")
 
   await db.delete(documents).where(eq(documents.id, id))
-  
+
   revalidatePath(`/workspace/${existing.workspaceId}`)
 }
 
@@ -392,6 +405,8 @@ async function isAncestor(documentId: string, targetId: string, workspaceId: str
 }
 
 export async function moveDocument(documentId: string, newParentId: string | null) {
+  await requireAuth()
+
   const existing = await db.query.documents.findFirst({
     where: eq(documents.id, documentId),
   })

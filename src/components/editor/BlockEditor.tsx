@@ -36,7 +36,6 @@ function extractTextFromBlockContent(content: unknown): string {
 export default function BlockEditor({ documentId, initialContent, onChange, onSyncStateChange }: BlockEditorProps) {
   const { theme } = useTheme()
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
-  const ingestTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   // Track previous block IDs to detect deletions
   const prevBlockIdsRef = React.useRef<Set<string>>(new Set())
 
@@ -91,31 +90,6 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
         onItemClick: () => soulRefine(editor),
       },
     ] as DefaultReactSuggestionItem[];
-
-  /**
-   * Trigger document ingestion (chunking + embedding) after sync.
-   * Debounced to 5 seconds to avoid excessive API calls during rapid editing.
-   */
-  const triggerIngest = (docId: string) => {
-    if (ingestTimeoutRef.current) clearTimeout(ingestTimeoutRef.current)
-    ingestTimeoutRef.current = setTimeout(async () => {
-      try {
-        const response = await fetch('/api/ingest', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ documentId: docId })
-        })
-        
-        // FIX 3: Check response status and log errors
-        if (!response.ok) {
-          console.error(`[INGEST_ERROR] Server returned ${response.status}: ${response.statusText}`)
-          return
-        }
-      } catch (error) {
-        console.error("[INGEST_TRIGGER]", error)
-      }
-    }, 5000)
-  }
 
   // AI Autocomplete function
   const soulWrite = async (editor: BlockNoteEditor) => {
@@ -275,14 +249,12 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
                     deletions
                   })
                 }).then(response => {
-                  // FIX 3: Check response status before marking saved
                   if (!response.ok) {
                     console.error(`[SYNC_ERROR] Server returned ${response.status}: ${response.statusText}`)
                     onSyncStateChange("error")
                     return
                   }
                   onSyncStateChange("saved")
-                  triggerIngest(documentId)
                 })
               } catch {
                 onSyncStateChange("error")
