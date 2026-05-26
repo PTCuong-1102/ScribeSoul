@@ -39,20 +39,20 @@ export default async function DocumentPage({ params }: { params: Promise<{ works
         const roots: any[] = []
 
         // 1. Map each block to BlockNote PartialBlock format
-        doc.blocks.forEach((b) => {
-          blockMap.set(b.id, {
-            id: b.id,
-            type: b.type,
+        doc.blocks.forEach((b: Record<string, unknown>) => {
+          blockMap.set(b.id as string, {
+            id: b.id as string,
+            type: b.type as string,
             content: b.content,
             children: [],
           })
         })
 
         // 2. Link children to their parent, preserve roots
-        doc.blocks.forEach((b) => {
-          const node = blockMap.get(b.id)
-          if (b.parentBlockId && blockMap.has(b.parentBlockId)) {
-            blockMap.get(b.parentBlockId).children.push(node)
+        doc.blocks.forEach((b: Record<string, unknown>) => {
+          const node = blockMap.get(b.id as string)
+          if (b.parentBlockId && blockMap.has(b.parentBlockId as string)) {
+            blockMap.get(b.parentBlockId as string).children.push(node)
           } else {
             roots.push(node)
           }

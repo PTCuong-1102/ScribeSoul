@@ -3,7 +3,7 @@ import { documentChunks, chunkEmbeddings } from "@/lib/db/schema/ai"
 import { blocks as blocksTable } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
 import { eq, asc } from "drizzle-orm"
-import { chunkBlocks } from "./chunker"
+import { chunkBlocks, estimateTokens, type BasicBlock } from "./chunker"
 import { generateEmbeddings } from "./embedder"
 
 export async function ingestDocument(documentId: string): Promise<{ success: boolean; count: number; message?: string }> {
@@ -25,8 +25,16 @@ export async function ingestDocument(documentId: string): Promise<{ success: boo
       return { success: true, count: 0, message: "No content to ingest" }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chunks = chunkBlocks(documentId, currentBlocks as any)
+    // Map Drizzle block type to BasicBlock — both share the same shape
+    const mappedBlocks: BasicBlock[] = currentBlocks.map(b => ({
+      id: b.id,
+      content: b.content as BasicBlock["content"],
+      type: b.type,
+      sortOrder: b.sortOrder,
+      parentBlockId: b.parentBlockId,
+    }))
+
+    const chunks = chunkBlocks(documentId, mappedBlocks)
 
     const embeddingResults = await generateEmbeddings(chunks.map(c => c.content))
 
@@ -39,6 +47,7 @@ export async function ingestDocument(documentId: string): Promise<{ success: boo
             documentId: chunk.metadata.docId,
             content: chunk.content,
             metadata: { blockIds: chunk.metadata.blockIds },
+            tokenCount: estimateTokens(chunk.content),
           }))
         ).returning()
 

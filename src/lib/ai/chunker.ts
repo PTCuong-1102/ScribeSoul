@@ -15,10 +15,16 @@ export interface Chunk {
   };
 }
 
-interface BasicBlock {
+export interface BlockContentItem {
+  text?: string;
+  styles?: Record<string, unknown>;
+}
+
+export type BlockContent = BlockContentItem[] | string;
+
+export interface BasicBlock {
   id: string;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  content: any;
+  content: BlockContent;
   [key: string]: unknown;
 }
 
@@ -29,7 +35,7 @@ interface BasicBlock {
  * - For CJK/Vietnamese: ~1.5 tokens per word (diacritics + multi-byte chars)
  * Falls back to word count * 1.3 as a safe middle ground.
  */
-function estimateTokens(text: string): number {
+export function estimateTokens(text: string): number {
   if (!text.trim()) return 0
   const words = text.trim().split(/\s+/).length
   // Approximate: 1.3 tokens per word is a safe estimate for mixed Vietnamese/English text

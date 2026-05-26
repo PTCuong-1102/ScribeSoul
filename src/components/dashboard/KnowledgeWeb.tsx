@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { getKnowledgeGraph } from "@/server/actions/search"
-import { Sparkles, Loader2 } from "lucide-react"
+import { Sparkles, Loader2, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Node {
@@ -31,6 +31,7 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
   const [nodes, setNodes] = useState<Node[]>([])
   const [links, setLinks] = useState<Link[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const tickCountRef = useRef(0)
   const isSimulatingRef = useRef(false)
@@ -41,22 +42,27 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
 
   useEffect(() => {
     async function loadData() {
+      setError(null)
       try {
         const data = await getKnowledgeGraph(workspaceId)
-        // Initialize random positions
-        const initialNodes = data.nodes.map((n: { id: string; label: string; type: string }) => ({
-          ...n,
-          x: Math.random() * 400 + 50,
-          y: Math.random() * 300 + 50,
-          vx: 0,
-          vy: 0
-        }))
-        setNodes(initialNodes)
-        setLinks(data.links)
-        tickCountRef.current = 0
-        isSimulatingRef.current = true
+        if (data.nodes.length === 0) {
+          setError("empty")
+        } else {
+          const initialNodes = data.nodes.map((n: { id: string; label: string; type: string }) => ({
+            ...n,
+            x: Math.random() * 400 + 50,
+            y: Math.random() * 300 + 50,
+            vx: 0,
+            vy: 0
+          }))
+          setNodes(initialNodes)
+          setLinks(data.links)
+          tickCountRef.current = 0
+          isSimulatingRef.current = true
+        }
       } catch (e) {
-        console.error(e)
+        console.error("[KNOWLEDGE_WEB_ERROR]", e)
+        setError("Không thể tải mạng lưới kiến thức. Vui lòng thử lại sau.")
       } finally {
         setLoading(false)
       }
@@ -133,6 +139,34 @@ export function KnowledgeWeb({ workspaceId }: { workspaceId: string }) {
   if (loading) return (
     <div className="w-full h-[400px] flex items-center justify-center bg-surface-container-lowest/30 rounded-3xl border border-border/5">
       <Loader2 className="w-6 h-6 text-secondary animate-spin" />
+    </div>
+  )
+
+  if (error === "empty") return (
+    <div className="relative w-full h-[400px] bg-surface-container-lowest/30 rounded-3xl border border-border/5 overflow-hidden flex items-center justify-center">
+      <div className="text-center space-y-2 opacity-60">
+        <Sparkles className="w-8 h-8 text-on-surface-variant/40 mx-auto" />
+        <p className="font-sans text-xs text-on-surface-variant/60">Chưa có tài liệu nào để hiển thị</p>
+        <p className="font-sans text-[10px] text-on-surface-variant/40 italic">Hãy tạo các tài liệu và liên kết chúng để xây dựng mạng lưới kiến thức</p>
+      </div>
+    </div>
+  )
+
+  if (error) return (
+    <div className="w-full h-[400px] flex flex-col items-center justify-center bg-surface-container-lowest/30 rounded-3xl border border-border/5 space-y-3">
+      <AlertTriangle className="w-8 h-8 text-destructive/60" />
+      <p className="font-sans text-sm text-on-surface-variant/80 text-center max-w-md">{error}</p>
+      <button
+        onClick={() => {
+          setLoading(true)
+          setError(null)
+          setNodes([])
+          setLinks([])
+        }}
+        className="font-sans text-xs text-secondary hover:underline mt-2"
+      >
+        Thử lại
+      </button>
     </div>
   )
 

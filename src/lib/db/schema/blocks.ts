@@ -6,11 +6,11 @@ export const blocks = pgTable("block", {
   documentId: uuid("document_id")
     .notNull()
     .references(() => documents.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // BlockNote block type (paragraph, heading, etc)
+  type: text("type").notNull(),
   content: jsonb("content").default({}).notNull(),
   props: jsonb("props").default({}).notNull(),
   sortOrder: integer("sort_order").notNull(),
-  parentBlockId: uuid("parent_block_id"), // For nested blocks
+  parentBlockId: uuid("parent_block_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

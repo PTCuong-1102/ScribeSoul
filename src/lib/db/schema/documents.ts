@@ -9,7 +9,7 @@ export const documents = pgTable("document", {
   workspaceId: uuid("workspace_id")
     .notNull()
     .references(() => workspaces.id, { onDelete: "cascade" }),
-  parentId: uuid("parent_id"), // Recursive self-reference for tree structure
+  parentId: uuid("parent_id"),
   title: text("title").default("Untitled").notNull(),
   type: docTypeEnum("type").default("doc").notNull(),
   status: docStatusEnum("status").default("draft").notNull(),

@@ -18,15 +18,29 @@ async function validateDocumentOwner(documentId: string) {
   return doc?.workspace.ownerId === session.user.id
 }
 
-export async function getBacklinks(documentId: string) {
+export interface BacklinkResult {
+  id: string
+  type: string
+  source: {
+    id: string
+    title: string | null
+    workspaceId: string
+  }
+}
+
+export async function getBacklinks(documentId: string): Promise<BacklinkResult[]> {
   if (!await validateDocumentOwner(documentId)) throw new Error("Unauthorized")
 
-  return db.query.documentLinks.findMany({
+  const raw = await db.query.documentLinks.findMany({
     where: eq(documentLinks.targetId, documentId),
     with: {
-      source: true // The document that points link TO this document
-    }
+      source: {
+        columns: { id: true, title: true, workspaceId: true },
+      },
+    },
   })
+
+  return raw as unknown as BacklinkResult[]
 }
 
 export async function createLink(sourceId: string, targetId: string, type: "mention" | "reference" | "plot-link" | "character-link" = "mention") {

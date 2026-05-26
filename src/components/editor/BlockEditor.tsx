@@ -36,26 +36,47 @@ function extractTextFromBlockContent(content: unknown): string {
 export default function BlockEditor({ documentId, initialContent, onChange, onSyncStateChange }: BlockEditorProps) {
   const { theme } = useTheme()
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
-  // Track previous block IDs to detect deletions
+  const retryCountRef = React.useRef(0)
+  // Initialize previous block IDs synchronously from initial content
+  // to avoid deletion detection race conditions on first render.
   const prevBlockIdsRef = React.useRef<Set<string>>(new Set())
-
-  // Initialize prevBlockIdsRef recursively from nested initial content
   React.useEffect(() => {
-    if (initialContent) {
-      const ids = new Set<string>()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const collectIds = (blocks: any[]) => {
-        for (const b of blocks) {
-          if (typeof b.id === "string") ids.add(b.id)
-          if (b.children && b.children.length > 0) {
-            collectIds(b.children)
-          }
-        }
+    const ids = new Set<string>()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const collect = (blocks: any[]) => {
+      for (const b of blocks) {
+        if (typeof b.id === "string") ids.add(b.id)
+        if (b.children?.length) collect(b.children)
       }
-      collectIds(initialContent)
-      prevBlockIdsRef.current = ids
     }
+    if (initialContent) collect(initialContent)
+    prevBlockIdsRef.current = ids
   }, [initialContent])
+
+  const syncWithRetry = React.useCallback(async (url: string, body: object, maxRetries = 3) => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        if (response.ok) {
+          retryCountRef.current = 0
+          return response
+        }
+        if (response.status >= 400 && response.status < 500) {
+          retryCountRef.current = 0
+          return response
+        }
+      } catch {
+        // Network errors — retry
+      }
+      await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)))
+    }
+    retryCountRef.current = 0
+    throw new Error("Sync failed after retries")
+  }, [])
 
   const editor = useCreateBlockNote({
     initialContent: initialContent || [
@@ -240,22 +261,22 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
                 // Update the ref for next comparison
                 prevBlockIdsRef.current = currentIds
 
-                await fetch('/api/sync', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
+                try {
+                  const response = await syncWithRetry('/api/sync', {
                     documentId,
                     upsert: currentBlocks,
                     deletions
                   })
-                }).then(response => {
                   if (!response.ok) {
-                    console.error(`[SYNC_ERROR] Server returned ${response.status}: ${response.statusText}`)
+                    console.error(`[SYNC_ERROR] Server returned ${response.status}`)
                     onSyncStateChange("error")
                     return
                   }
                   onSyncStateChange("saved")
-                })
+                } catch {
+                  console.error("[SYNC_ERROR] All retries exhausted")
+                  onSyncStateChange("error")
+                }
               } catch {
                 onSyncStateChange("error")
               }
