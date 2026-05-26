@@ -18,9 +18,8 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
   }
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
-
-
 
   const handleSelect = useCallback((docId: string) => {
     setOpen(false)
@@ -77,8 +76,10 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
         const searchResults = await semanticSearch(workspaceId, val)
         setResults(searchResults)
         setSelectedIndex(0)
-      } catch (e) {
-        console.error(e)
+        setError(false)
+      } catch {
+        setError(true)
+        setResults([])
       } finally {
         setLoading(false)
       }
@@ -143,7 +144,13 @@ export function CommandSearch({ workspaceId }: { workspaceId: string }) {
             </div>
           )}
 
-          {!loading && query && results.length === 0 && (
+          {!loading && error && (
+            <p className="p-8 text-center text-on-surface-variant text-sm font-sans italic">
+              Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.
+            </p>
+          )}
+
+          {!loading && !error && query && results.length === 0 && (
             <p className="p-8 text-center text-on-surface-variant text-sm font-sans italic">
               Không tìm thấy kết quả phù hợp.
             </p>

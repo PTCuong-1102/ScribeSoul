@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { getBacklinks } from '@/server/actions/links'
 import { FileText, Link as LinkIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -18,14 +19,16 @@ interface Backlink {
 export function BacklinksPanel({ documentId }: { documentId: string }) {
   const [backlinks, setBacklinks] = useState<Backlink[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     async function fetch() {
       try {
         const data = await getBacklinks(documentId)
         setBacklinks(data)
-      } catch (e) {
-        console.error(e)
+      } catch {
+        setError(true)
+        toast.error("Không thể tải backlinks.")
       } finally {
         setLoading(false)
       }
@@ -34,6 +37,7 @@ export function BacklinksPanel({ documentId }: { documentId: string }) {
   }, [documentId])
 
   if (loading) return null
+  if (error) return null
   if (backlinks.length === 0) return null
 
   return (

@@ -16,7 +16,7 @@ export const maxDuration = 30;
 const chatSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(["user", "assistant", "system"]),
-    content: z.string().min(1, "Message content cannot be empty"),
+    content: z.string().min(1, "Message content cannot be empty").max(100000, "Message content too long"),
   })).min(1, "Messages cannot be empty"),
   workspaceId: z.string().uuid(),
   conversationId: z.string().uuid().optional(),

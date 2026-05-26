@@ -9,7 +9,7 @@ import { z } from "zod"
 
 const workspaceSchema = z.object({
   name: z.string().min(1, "Tên workspace không được để trống").max(100),
-  settings: z.any().optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
 })
 
 export async function createWorkspace(data: z.infer<typeof workspaceSchema>) {

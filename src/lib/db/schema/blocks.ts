@@ -15,6 +15,7 @@ export const blocks = pgTable("block", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   docIdx: index("block_doc_idx").on(table.documentId),
+  parentIdx: index("block_parent_idx").on(table.parentBlockId),
   orderIdx: index("block_order_idx").on(table.sortOrder),
   docOrderUnique: unique("doc_sort_order_unique").on(table.documentId, table.sortOrder),
 }))

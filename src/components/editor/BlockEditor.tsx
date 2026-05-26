@@ -53,6 +53,12 @@ export default function BlockEditor({ documentId, initialContent, onChange, onSy
     prevBlockIdsRef.current = ids
   }, [initialContent])
 
+  React.useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    }
+  }, [])
+
   const syncWithRetry = React.useCallback(async (url: string, body: object, maxRetries = 3) => {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {

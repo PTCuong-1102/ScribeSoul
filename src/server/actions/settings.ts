@@ -10,7 +10,7 @@ import { z } from "zod"
 
 const updateProfileSchema = z.object({
   name: z.string().max(100, "Tên không được vượt quá 100 ký tự").optional().nullable(),
-  image: z.string().url("Hình ảnh phải là URL hợp lệ").refine(
+  image: z.string().url("Hình ảnh phải là URL hợp lệ").max(2048, "URL quá dài").refine(
     (val) => !val || val.startsWith("https://"),
     "Hình ảnh phải sử dụng giao thức HTTPS bảo mật"
   ).optional().nullable().or(z.literal("")),

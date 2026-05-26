@@ -24,6 +24,7 @@ export const documentChunks = pgTable("document_chunk", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   docIdx: index("chunk_doc_idx").on(table.documentId),
+  blockIdx: index("chunk_block_idx").on(table.blockId),
 }))
 
 export const chunkEmbeddings = pgTable("chunk_embedding", {
