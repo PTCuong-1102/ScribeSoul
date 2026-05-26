@@ -5,26 +5,24 @@ import { blocks } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
 import { eq, asc } from "drizzle-orm"
 import { auth } from "@/lib/auth/server"
+import type { BlockContent, BlockContentItem } from "@/lib/ai/chunker"
 
-/**
- * Converts BlockNote JSON blocks to a basic Markdown string.
- */
 interface BlockData {
   type: string;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  content?: any;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  props?: any;
+  content?: BlockContent;
+  props?: Record<string, unknown>;
 }
 
 function blocksToMarkdown(documentBlocks: BlockData[]): string {
   return documentBlocks.map(block => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const text = block.content?.map((c: any) => c.text || "").join('') || '';
-    
+    const content = block.content
+    const text = Array.isArray(content)
+      ? content.map((c: BlockContentItem) => c.text || "").join('')
+      : typeof content === 'string' ? content : ''
+
     switch (block.type) {
       case "heading": {
-        const level = typeof block.props === 'object' && block.props !== null && typeof block.props.level === 'number'
+        const level = typeof block.props?.level === 'number'
           ? block.props.level
           : 2;
         return `${"#".repeat(level)} ${text}\n\n`;
@@ -52,10 +50,16 @@ export async function exportDocumentAsMarkdown(documentId: string) {
   if (!doc) throw new Error("Document not found");
   if (doc.workspace.ownerId !== session.user.id) throw new Error("Forbidden");
 
-  const docBlocks = await db.query.blocks.findMany({
+  const rawBlocks = await db.query.blocks.findMany({
     where: eq(blocks.documentId, documentId),
     orderBy: [asc(blocks.sortOrder)]
   })
+
+  const docBlocks: BlockData[] = rawBlocks.map(b => ({
+    type: b.type,
+    content: b.content as BlockContent | undefined,
+    props: b.props as Record<string, unknown> | undefined,
+  }))
 
   const content = blocksToMarkdown(docBlocks);
   const frontmatter = `---

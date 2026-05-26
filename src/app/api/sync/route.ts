@@ -3,26 +3,13 @@ import { auth } from "@/lib/auth/server"
 import { db } from "@/lib/db"
 import { blocks } from "@/lib/db/schema/blocks"
 import { documents } from "@/lib/db/schema/documents"
-import { eq, and, inArray, sql } from "drizzle-orm"
+import { pendingIngests } from "@/lib/db/schema/ingest_queue"
+import { eq, and, inArray, lte, sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import crypto from "crypto"
 import { ingestDocument } from "@/lib/ai/ingest"
 import { checkRateLimit } from "@/lib/rate-limit"
-
-// In-memory debounce map to coalesce ingests for the same document
-const pendingIngestTimers = new Map<string, ReturnType<typeof setTimeout>>()
-
-function scheduleIngest(documentId: string): void {
-  const existing = pendingIngestTimers.get(documentId)
-  if (existing) clearTimeout(existing)
-  pendingIngestTimers.set(documentId, setTimeout(() => {
-    pendingIngestTimers.delete(documentId)
-    ingestDocument(documentId).catch(err => {
-      console.error("[SYNC_INGEST_ERROR] Failed to ingest after sync:", err)
-    })
-  }, 5000))
-}
 
 const syncSchema = z.object({
   documentId: z.string().uuid(),
@@ -35,6 +22,21 @@ const syncSchema = z.object({
   })).max(1000, "Quá nhiều blocks để đồng bộ (tối đa 1000)"),
   deletions: z.array(z.string().uuid()).max(500, "Quá nhiều deletions (tối đa 500)"),
 })
+
+async function processDueIngests(): Promise<void> {
+  try {
+    const due = await db.query.pendingIngests.findMany({
+      where: lte(pendingIngests.scheduledAt, new Date()),
+      orderBy: (items, { asc }) => [asc(items.scheduledAt)],
+    })
+    for (const item of due) {
+      await db.delete(pendingIngests).where(eq(pendingIngests.documentId, item.documentId))
+      await ingestDocument(item.documentId)
+    }
+  } catch (error) {
+    console.error("[PROCESS_INGESTS_ERROR]", error)
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -119,10 +121,21 @@ export async function POST(req: Request) {
       .set({ updatedAt: new Date() })
       .where(eq(documents.id, validated.documentId))
 
-    // Debounced ingestion: coalesces rapid syncs for the same document
+    // DB-backed debounced ingestion: coalesces rapid syncs for the same document
     // into a single ingest call after 5s of inactivity.
-    // This prevents race conditions and excessive OpenAI API calls.
-    scheduleIngest(validated.documentId)
+    // Using DB instead of in-memory Map ensures reliability in serverless.
+    await db.insert(pendingIngests)
+      .values({
+        documentId: validated.documentId,
+        scheduledAt: new Date(Date.now() + 5000),
+      })
+      .onConflictDoUpdate({
+        target: pendingIngests.documentId,
+        set: { scheduledAt: new Date(Date.now() + 5000) },
+      })
+
+    // Process any due ingests
+    await processDueIngests()
 
     return NextResponse.json({ success: true })
   } catch (error) {

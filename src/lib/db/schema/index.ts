@@ -13,6 +13,7 @@ export * from "./documents"
 export * from "./blocks"
 export * from "./links"
 export * from "./ai"
+export * from "./ingest_queue"
 
 // Relations
 export const userRelations = relations(usersSchema.users, ({ many }) => ({
