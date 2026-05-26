@@ -72,10 +72,10 @@ export async function signOut() {
  */
 export async function getCurrentUser() {
   const { data: session } = await auth.getSession()
-  if (!session?.user?.email) return null
+  if (!session?.user?.id) return null
 
   const user = await db.query.users.findFirst({
-    where: eq(users.email, session.user.email),
+    where: eq(users.id, session.user.id),
   })
 
   return user || null

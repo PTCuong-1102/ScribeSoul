@@ -22,10 +22,13 @@ async function checkWorkspaceOwnership(workspaceId: string) {
  * Lấy danh sách các cuộc trò chuyện AI của một workspace
  */
 export async function getConversations(workspaceId: string) {
-  await checkWorkspaceOwnership(workspaceId)
+  const userId = await checkWorkspaceOwnership(workspaceId)
   
   return db.query.aiConversations.findMany({
-    where: eq(aiConversations.workspaceId, workspaceId),
+    where: and(
+      eq(aiConversations.workspaceId, workspaceId),
+      eq(aiConversations.userId, userId),
+    ),
     orderBy: [desc(aiConversations.updatedAt)],
   })
 }

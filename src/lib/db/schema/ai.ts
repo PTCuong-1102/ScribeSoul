@@ -51,7 +51,9 @@ export const aiConversations = pgTable("ai_conversation", {
     .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-})
+}, (table) => ({
+  convWorkspaceIdx: index("conv_workspace_idx").on(table.workspaceId),
+}))
 
 export const aiMessages = pgTable("ai_message", {
   id: uuid("id").notNull().primaryKey().defaultRandom(),
@@ -63,4 +65,6 @@ export const aiMessages = pgTable("ai_message", {
   citations: jsonb("citations").default([]).notNull(),
   tokenUsage: jsonb("token_usage").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-})
+}, (table) => ({
+  msgConvIdx: index("msg_conversation_idx").on(table.conversationId),
+}))

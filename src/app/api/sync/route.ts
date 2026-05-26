@@ -8,6 +8,21 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import crypto from "crypto"
 import { ingestDocument } from "@/lib/ai/ingest"
+import { checkRateLimit } from "@/lib/rate-limit"
+
+// In-memory debounce map to coalesce ingests for the same document
+const pendingIngestTimers = new Map<string, ReturnType<typeof setTimeout>>()
+
+function scheduleIngest(documentId: string): void {
+  const existing = pendingIngestTimers.get(documentId)
+  if (existing) clearTimeout(existing)
+  pendingIngestTimers.set(documentId, setTimeout(() => {
+    pendingIngestTimers.delete(documentId)
+    ingestDocument(documentId).catch(err => {
+      console.error("[SYNC_INGEST_ERROR] Failed to ingest after sync:", err)
+    })
+  }, 5000))
+}
 
 const syncSchema = z.object({
   documentId: z.string().uuid(),
@@ -17,14 +32,36 @@ const syncSchema = z.object({
     content: z.any(),
     sortOrder: z.number(),
     parentBlockId: z.string().uuid().optional().nullable(),
-  })),
-  deletions: z.array(z.string().uuid()),
+  })).max(1000, "Quá nhiều blocks để đồng bộ (tối đa 1000)"),
+  deletions: z.array(z.string().uuid()).max(500, "Quá nhiều deletions (tối đa 500)"),
 })
 
 export async function POST(req: Request) {
   try {
     const { data: session } = await auth.getSession()
     if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 })
+
+    // Rate limit: 120 sync requests per minute per user
+    const rateLimitKey = `sync:${session.user.id}`
+    const rateLimitResult = await checkRateLimit(rateLimitKey, 120, "1 m")
+    if (!rateLimitResult.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Quá nhiều yêu cầu đồng bộ. Vui lòng thử lại sau.",
+          code: "RATE_LIMIT_EXCEEDED",
+          retryAfter: new Date(rateLimitResult.reset).toISOString(),
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "X-RateLimit-Limit": "120",
+            "X-RateLimit-Remaining": String(rateLimitResult.remaining),
+            "X-RateLimit-Reset": String(rateLimitResult.reset),
+          },
+        }
+      )
+    }
 
     const body = await req.json()
     const validated = syncSchema.parse(body)
@@ -49,10 +86,6 @@ export async function POST(req: Request) {
           ))
       }
 
-      // Process upserts using a bulk strategy:
-      // 1. Separate items with IDs (potential updates) from new items
-      // 2. For items with IDs, delete all existing and re-insert in bulk
-      //    This avoids N+1 SELECT+UPDATE pattern and handles both insert/update cases
       if (validated.upsert.length > 0) {
         const allValues = validated.upsert.map(item => ({
           id: item.id || crypto.randomUUID(),
@@ -86,11 +119,10 @@ export async function POST(req: Request) {
       .set({ updatedAt: new Date() })
       .where(eq(documents.id, validated.documentId))
 
-    // Auto-trigger ingestion (fire-and-forget to avoid blocking the sync response).
-    // This ensures the RAG pipeline runs even if the client disconnects.
-    ingestDocument(validated.documentId).catch(err => {
-      console.error("[SYNC_INGEST_ERROR] Failed to ingest after sync:", err)
-    })
+    // Debounced ingestion: coalesces rapid syncs for the same document
+    // into a single ingest call after 5s of inactivity.
+    // This prevents race conditions and excessive OpenAI API calls.
+    scheduleIngest(validated.documentId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

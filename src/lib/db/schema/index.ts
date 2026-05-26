@@ -78,3 +78,18 @@ export const documentLinkRelations = relations(linksSchema.documentLinks, ({ one
     relationName: "link_target",
   }),
 }))
+
+export const documentChunkRelations = relations(aiSchema.documentChunks, ({ one, many }) => ({
+  document: one(documentsSchema.documents, {
+    fields: [aiSchema.documentChunks.documentId],
+    references: [documentsSchema.documents.id],
+  }),
+  embeddings: many(aiSchema.chunkEmbeddings),
+}))
+
+export const chunkEmbeddingRelations = relations(aiSchema.chunkEmbeddings, ({ one }) => ({
+  chunk: one(aiSchema.documentChunks, {
+    fields: [aiSchema.chunkEmbeddings.chunkId],
+    references: [aiSchema.documentChunks.id],
+  }),
+}))
