@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   try {
     const { data: session } = await auth.getSession()
     const authHeader = req.headers.get("Authorization")
-    const isInternal = authHeader && authHeader === `Bearer ${process.env.INTERNAL_API_SECRET}`
+    const isInternal = !!(process.env.INTERNAL_API_SECRET && authHeader === `Bearer ${process.env.INTERNAL_API_SECRET}`)
 
     if (!session?.user?.id && !isInternal) {
       return new NextResponse("Unauthorized", { status: 401 })
