@@ -48,10 +48,12 @@ export async function updateWorkspace(
   const { data: session } = await auth.getSession()
   if (!session?.user?.id) throw new Error("Chưa đăng nhập")
 
+  const validated = workspaceSchema.partial().parse(data)
+
   const [updated] = await db
     .update(workspaces)
     .set({
-      ...data,
+      ...validated,
       updatedAt: new Date(),
     })
     .where(and(eq(workspaces.id, id), eq(workspaces.ownerId, session.user.id)))
