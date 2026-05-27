@@ -334,7 +334,15 @@ export async function getProductivityStats(workspaceId: string, timezone?: strin
   lookbackLimit.setDate(lookbackLimit.getDate() - 365)
 
   // Get unique activity days using high-performance SQL DISTINCT query with timezone offset
-  const dbTimezone = timezone || 'UTC'
+  let dbTimezone = 'UTC'
+  if (timezone) {
+    try {
+      Intl.DateTimeFormat(undefined, { timeZone: timezone })
+      dbTimezone = timezone
+    } catch {
+      console.warn(`[timezone-validation] Invalid timezone passed: ${timezone}, falling back to UTC`)
+    }
+  }
   const activeDates = await db
     .select({
       date: sql<string>`DISTINCT (timezone(${dbTimezone}, ${blocks.updatedAt})::date)::text`
