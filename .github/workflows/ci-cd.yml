@@ -38,10 +38,11 @@ jobs:
     # Needs secrets if build-time data fetching is used
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
-      AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      NEON_AUTH_BASE_URL: ${{ secrets.NEON_AUTH_BASE_URL }}
+      NEON_AUTH_COOKIE_SECRET: ${{ secrets.NEON_AUTH_COOKIE_SECRET }}
+      GOOGLE_ID: ${{ secrets.GOOGLE_ID }}
+      GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     steps:
       - name: Checkout Code
@@ -92,9 +93,9 @@ jobs:
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Push DB Schema
+      - name: Migrate DB Schema
         if: ${{ steps.db_url.outputs.available == 'true' }}
-        run: npx drizzle-kit push
-      - name: Skip DB Schema Push (missing DATABASE_URL)
+        run: npx drizzle-kit migrate
+      - name: Skip DB Schema Migration (missing DATABASE_URL)
         if: ${{ steps.db_url.outputs.available == 'false' }}
         run: echo "Skipping DB schema push because DATABASE_URL secret is not configured."
